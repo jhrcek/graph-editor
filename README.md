@@ -14,3 +14,7 @@ Simple editor for creating graphs implemented purely in Elm.
     - [ ] viewing graphs
     - [ ] rearranging nodes via drag and drop
 - [ ] At any time automatic graph layout mode can be enabled / disabled.
+- [ ] Ability to save / load multiple graphs in local storage
+
+# TODOs
+Look at svg drag & drop examples https://github.com/oresmus/elm-examples/tree/master/svg-drag-1

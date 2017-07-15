@@ -1,41 +1,97 @@
 module Main exposing (..)
 
-import Html exposing (Html)
 import Graph exposing (Graph)
-import Visualization.Force as Force
-
-
-type Msg
-    = NoOp
+import Html exposing (Html)
+import Html.Attributes
+import Svg exposing (Svg)
+import Types exposing (..)
+import SvgMouse
+import View
+import IntDict
 
 
 type alias Model =
-    Graph GraphNode ()
+    { graph : ModelGraph
+    , newNodeId : Int
+    }
 
 
-type alias Labeled =
-    { label : String }
+type alias ModelGraph =
+    Graph NodeLabel ()
 
 
 type alias GraphNode =
-    Force.Entity Int Labeled
+    Graph.Node NodeLabel
+
+
+type alias NodeLabel =
+    { nodeText : String
+    , x : Int
+    , y : Int
+    }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( Graph.empty, Cmd.none )
+    ( { graph = Graph.empty, newNodeId = 0 }, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model
-    , Cmd.none
-    )
+    let
+        _ =
+            Debug.log "msg" msg
+    in
+        case msg of
+            CanvasClicked { x, y } ->
+                let
+                    newNode =
+                        makeNode model.newNodeId x y "Test"
+
+                    newGraph =
+                        insertNode newNode model.graph
+                in
+                    ( { model | graph = newGraph, newNodeId = model.newNodeId + 1 }
+                    , Cmd.none
+                    )
+
+            NoOp ->
+                ( model, Cmd.none )
+
+
+insertNode : GraphNode -> ModelGraph -> ModelGraph
+insertNode node =
+    Graph.insert
+        { node = node
+        , incoming = IntDict.empty
+        , outgoing = IntDict.empty
+        }
 
 
 view : Model -> Html Msg
-view model =
-    Html.div [] [ Html.text "Hi" ]
+view { graph, newNodeId } =
+    Svg.svg [ Html.Attributes.style [ ( "width", "100%" ), ( "height", "100%" ), ( "position", "fixed" ) ], SvgMouse.onClick CanvasClicked ]
+        (Graph.nodes graph |> List.map viewNode)
+
+
+viewNode : GraphNode -> Svg Msg
+viewNode node =
+    let
+        lab =
+            node.label
+    in
+        View.boxedText node.id lab.x lab.y lab.nodeText
+
+
+makeNode : Int -> Int -> Int -> String -> GraphNode
+makeNode id x y nodeText =
+    { id = id
+    , label =
+        { nodeText = nodeText
+        , x = x
+        , y = y
+        }
+    }
 
 
 main : Program Never Model Msg
