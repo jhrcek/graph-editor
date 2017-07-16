@@ -37,7 +37,7 @@ boxedText nodeId { x, y, nodeText } =
                 , height (toString boxHeight)
                 , rx "2"
                 , ry "2"
-                , fill "none"
+                , fill "white"
                 , stroke "black"
                 , strokeWidth "1"
                 , dragStartEvent

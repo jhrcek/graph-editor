@@ -15,6 +15,3 @@ Simple editor for creating graphs implemented purely in Elm.
     - [ ] rearranging nodes via drag and drop
 - [ ] At any time automatic graph layout mode can be enabled / disabled.
 - [ ] Ability to save / load multiple graphs in local storage
-
-# TODOs
-- Figure out how to prevent node creation when clicking ANYWHERE in the node
