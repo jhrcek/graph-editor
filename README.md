@@ -3,8 +3,8 @@
 Simple editor for creating graphs implemented purely in Elm.
 
 # Features
-- [ ] Nodes can be created in Node editing mode by clicking on the canvas
-- [ ] Nodes are draggable
+- [x] Nodes can be created in Node editing mode by clicking on the canvas
+- [x] Nodes are draggable
 - [ ] Nodes are editable - double clicking node opens node edit form. The form enables setting node label or deleting the node.
 - [ ] Edges can be created in Edge editing mode by either
     - [ ] clicking on start node (which highlights it) and then clicking on end node. Clicking on start node again cancels the selection
@@ -17,4 +17,4 @@ Simple editor for creating graphs implemented purely in Elm.
 - [ ] Ability to save / load multiple graphs in local storage
 
 # TODOs
-Look at svg drag & drop examples https://github.com/oresmus/elm-examples/tree/master/svg-drag-1
+- Figure out how to prevent node creation when clicking ANYWHERE in the node
