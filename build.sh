@@ -1,3 +1,3 @@
 #!/bin/bash
-rm -f index.html
-elm make src/Main.elm
+rm -f app.js
+elm make src/Main.elm --output=app.js

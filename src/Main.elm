@@ -9,27 +9,13 @@ import Mouse exposing (Position)
 import Svg exposing (Svg)
 import SvgMouse
 import Types exposing (..)
-import View
-
-
-type alias Model =
-    { graph : ModelGraph
-    , newNodeId : Int
-    , draggedNode : Maybe Drag
-    }
-
-
-type alias ModelGraph =
-    Graph NodeLabel ()
-
-
-type alias GraphNode =
-    Graph.Node NodeLabel
+import Canvas
+import Forms.Node
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { graph = Graph.empty, newNodeId = 0, draggedNode = Nothing }, Cmd.none )
+    ( { graph = Graph.empty, newNodeId = 0, draggedNode = Nothing, editorMode = NodeEditMode Nothing }, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -38,7 +24,7 @@ update msg model =
         CanvasClicked { x, y } ->
             let
                 newNode =
-                    makeNode model.newNodeId x y "Test"
+                    makeNode model.newNodeId x y ""
 
                 newGraph =
                     insertNode newNode model.graph
@@ -52,6 +38,21 @@ update msg model =
 
         NoOp ->
             ( model, Cmd.none )
+
+        NodeEditStart nodeId nodeText ->
+            ( { model | editorMode = NodeEditMode (Just ( nodeId, nodeText )) }, Cmd.none )
+
+        NodeEditConfirm nodeId newLabel ->
+            ( { model | graph = updateNodeLabel nodeId newLabel model.graph, editorMode = NodeEditMode Nothing }, Cmd.none )
+
+        NodeEditCancel ->
+            ( { model | editorMode = NodeEditMode Nothing }, Cmd.none )
+
+        NodeLabelEdit nodeId newLabel ->
+            ( { model | editorMode = NodeEditMode (Just ( nodeId, newLabel )) }, Cmd.none )
+
+        DeleteNode nodeId ->
+            ( { model | graph = Graph.remove nodeId model.graph, editorMode = NodeEditMode Nothing }, Cmd.none )
 
 
 processDragMsg : DragMsg -> Model -> Model
@@ -82,6 +83,11 @@ updateDraggedNodeInContext drag =
     Maybe.map (updateNodeInContext (updateLabelInNode (getDraggedNodePosition drag)))
 
 
+updateNodeLabel : NodeId -> String -> ModelGraph -> ModelGraph
+updateNodeLabel nodeId newNodeText graph =
+    Graph.update nodeId (Maybe.map (updateNodeInContext (updateLabelInNode (\lbl -> { lbl | nodeText = newNodeText })))) graph
+
+
 getDraggedNodePosition : Drag -> NodeLabel -> NodeLabel
 getDraggedNodePosition { nodeId, start, current } nodeLabel =
     { nodeLabel
@@ -100,10 +106,12 @@ insertNode node =
 
 
 view : Model -> Html Msg
-view { graph, draggedNode } =
+view ({ graph, draggedNode } as model) =
     Html.div []
         [ viewCanvas graph draggedNode
-        , debugView graph draggedNode
+        , viewNodeForm model
+
+        --        , debugView graph draggedNode
         ]
 
 
@@ -138,7 +146,17 @@ viewNode mDrag node =
                 Nothing ->
                     node.label
     in
-        View.boxedText node.id labelMaybeAffectedByDrag
+        Canvas.boxedText node.id labelMaybeAffectedByDrag
+
+
+viewNodeForm : Model -> Html Msg
+viewNodeForm { editorMode, graph } =
+    case editorMode of
+        NodeEditMode (Just ( nodeId, nodeText )) ->
+            Forms.Node.nodeForm nodeId nodeText
+
+        _ ->
+            Html.text ""
 
 
 makeNode : Int -> Int -> Int -> String -> GraphNode

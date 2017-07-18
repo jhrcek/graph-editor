@@ -1,7 +1,7 @@
-module SvgMouse exposing (onCanvasMouseDown, onMouseDown)
+module SvgMouse exposing (onCanvasMouseDown, onMouseDownStopPropagation, onDoubleClickStopPropagation)
 
 import Html exposing (Attribute)
-import Html.Events exposing (on, onWithOptions, Options)
+import Html.Events exposing (Options, defaultOptions, on, onWithOptions)
 import Json.Decode as Json exposing (field, int)
 import Mouse exposing (Position)
 import Types exposing (Msg)
@@ -28,15 +28,18 @@ offsetPosition =
         (field "offsetY" int)
 
 
-onMouseDown : (Position -> Msg) -> Attribute Msg
-onMouseDown tagger =
+onMouseDownStopPropagation : (Position -> Msg) -> Attribute Msg
+onMouseDownStopPropagation tagger =
     onWithOptions "mousedown" stopPropagationOptions (Json.map tagger Mouse.position)
+
+
+onDoubleClickStopPropagation : Msg -> Attribute Msg
+onDoubleClickStopPropagation msg =
+    onWithOptions "dblclick" stopPropagationOptions (Json.succeed msg)
 
 
 {-| options to prevent clicks on canvas nodes triggering click events on canvas itself
 -}
 stopPropagationOptions : Options
 stopPropagationOptions =
-    { stopPropagation = True
-    , preventDefault = True
-    }
+    { defaultOptions | stopPropagation = True }

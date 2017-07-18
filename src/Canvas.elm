@@ -1,10 +1,10 @@
-module View exposing (boxedText)
+module Canvas exposing (boxedText)
 
-import Svg exposing (Svg, rect, text, text_, g)
-import Svg.Attributes exposing (transform, width, height, x, y, rx, ry, stroke, strokeWidth, fill, textAnchor, alignmentBaseline, fontSize, fontFamily, name)
+import Graph exposing (NodeId)
+import Svg exposing (Svg, g, rect, text, text_)
+import Svg.Attributes exposing (alignmentBaseline, fill, fontFamily, fontSize, height, name, rx, ry, stroke, strokeWidth, textAnchor, transform, width, x, y)
 import SvgMouse
 import Types exposing (..)
-import Graph exposing (NodeId)
 
 
 boxedText : NodeId -> NodeLabel -> Svg Msg
@@ -17,16 +17,13 @@ boxedText nodeId { x, y, nodeText } =
             characterWidthPixels * String.length nodeText
 
         boxWidth =
-            textContentWidth + 15
+            textContentWidth + 20
 
         boxCenterX =
             boxWidth // 2
 
         boxCenterY =
             boxHeight // 2
-
-        dragStartEvent =
-            SvgMouse.onMouseDown (NodeDrag << DragStart nodeId)
     in
         g
             [ transform tranformValue
@@ -40,7 +37,8 @@ boxedText nodeId { x, y, nodeText } =
                 , fill "white"
                 , stroke "black"
                 , strokeWidth "1"
-                , dragStartEvent
+                , onClickStartDrag nodeId
+                , onDoubleClickStartEdit nodeId nodeText
                 ]
                 []
             , text_
@@ -49,12 +47,23 @@ boxedText nodeId { x, y, nodeText } =
                 , fill "black"
                 , textAnchor "middle"
                 , alignmentBaseline "central"
-                , fontSize "10px"
+                , fontSize "16px"
                 , fontFamily "Inconsolata, sans-serif"
-                , dragStartEvent
+                , onClickStartDrag nodeId
+                , onDoubleClickStartEdit nodeId nodeText
                 ]
                 [ text nodeText ]
             ]
+
+
+onDoubleClickStartEdit : NodeId -> String -> Svg.Attribute Msg
+onDoubleClickStartEdit nodeId nodeText =
+    SvgMouse.onDoubleClickStopPropagation (NodeEditStart nodeId nodeText)
+
+
+onClickStartDrag : NodeId -> Svg.Attribute Msg
+onClickStartDrag nodeId =
+    SvgMouse.onMouseDownStopPropagation (NodeDrag << DragStart nodeId)
 
 
 
@@ -64,9 +73,14 @@ boxedText nodeId { x, y, nodeText } =
 
 characterWidthPixels : Int
 characterWidthPixels =
-    6
+    7
+
+
+characterHeightPixels : Int
+characterHeightPixels =
+    14
 
 
 boxHeight : Int
 boxHeight =
-    25
+    characterHeightPixels * 2
