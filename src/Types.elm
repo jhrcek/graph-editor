@@ -66,6 +66,7 @@ type EditorMode
     = BrowsingMode
     | NodeEditMode (Maybe ( NodeId, String ))
     | EdgeEditMode
+    | DeletionMode
 
 
 getDraggedNodePosition : Drag -> NodeLabel -> NodeLabel

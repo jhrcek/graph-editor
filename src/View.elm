@@ -1,37 +1,44 @@
 module View exposing (view)
 
+import Canvas
 import Graph exposing (NodeId)
 import Html exposing (Html, button, div, form, h3, input, label, li, span, text, ul)
 import Html.Attributes as Attr exposing (autofocus, class, classList, id, name, placeholder, readonly, style, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
-import Types exposing (EditorMode(..), ModelGraph, Msg, Msg(..), Model, NodeLabel, Drag, GraphNode)
 import Svg exposing (Svg)
 import SvgMouse
-import Canvas
+import Types exposing (Drag, EditorMode(..), GraphNode, Model, ModelGraph, Msg, Msg(..), NodeLabel)
 
 
 view : Model -> Html Msg
-view ({ graph, draggedNode } as model) =
+view ({ graph, draggedNode, editorMode } as model) =
     Html.div []
-        [ viewCanvas graph draggedNode
+        [ viewCanvas editorMode graph draggedNode
         , controlsPanel model.editorMode
         , viewNodeForm model
-
-        --  , debugView graph draggedNode model.editorMode
         ]
 
 
-viewCanvas : ModelGraph -> Maybe Drag -> Html Msg
-viewCanvas graph draggedNode =
-    Svg.svg
-        [ style [ ( "width", "100%" ), ( "height", "100%" ), ( "position", "fixed" ) ]
-        , SvgMouse.onCanvasMouseDown CanvasClicked
-        ]
-        (Graph.nodes graph |> List.map (viewNode draggedNode))
+viewCanvas : EditorMode -> ModelGraph -> Maybe Drag -> Html Msg
+viewCanvas editorMode graph draggedNode =
+    let
+        canvasEventListeners =
+            case editorMode of
+                NodeEditMode _ ->
+                    [ SvgMouse.onCanvasMouseDown CanvasClicked ]
+
+                _ ->
+                    []
+
+        svgElemAttributes =
+            canvasEventListeners ++ [ style [ ( "width", "100%" ), ( "height", "100%" ), ( "position", "fixed" ) ] ]
+    in
+        Svg.svg svgElemAttributes
+            (Graph.nodes graph |> List.map (viewNode draggedNode editorMode))
 
 
-viewNode : Maybe Drag -> GraphNode -> Svg Msg
-viewNode mDrag node =
+viewNode : Maybe Drag -> EditorMode -> GraphNode -> Svg Msg
+viewNode mDrag editorMode node =
     let
         labelMaybeAffectedByDrag =
             case mDrag of
@@ -44,7 +51,7 @@ viewNode mDrag node =
                 Nothing ->
                     node.label
     in
-        Canvas.boxedText node.id labelMaybeAffectedByDrag
+        Canvas.boxedText node.id labelMaybeAffectedByDrag editorMode
 
 
 viewNodeForm : Model -> Html Msg
@@ -61,6 +68,7 @@ controlsPanel : EditorMode -> Html Msg
 controlsPanel currentMode =
     let
         nodeEditModeEnabled =
+            --TODO don't like this chatty way of recognizing the enum constant. Better way?
             case currentMode of
                 NodeEditMode _ ->
                     True
@@ -73,6 +81,7 @@ controlsPanel currentMode =
                 [ modeView (currentMode == BrowsingMode) "Browse" BrowsingMode
                 , modeView nodeEditModeEnabled "Edit nodes" (NodeEditMode Nothing)
                 , modeView (currentMode == EdgeEditMode) "Edit edges" EdgeEditMode
+                , modeView (currentMode == DeletionMode) "Deletion mode" DeletionMode
                 ]
             ]
 

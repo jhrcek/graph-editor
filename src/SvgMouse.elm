@@ -1,4 +1,10 @@
-module SvgMouse exposing (onCanvasMouseDown, onMouseDownStopPropagation, onDoubleClickStopPropagation)
+module SvgMouse
+    exposing
+        ( onCanvasMouseDown
+        , onMouseDownStopPropagation
+        , onDoubleClickStopPropagation
+        , onClickStopPropagation
+        )
 
 import Html exposing (Attribute)
 import Html.Events exposing (Options, defaultOptions, on, onWithOptions)
@@ -26,6 +32,11 @@ offsetPosition =
     Json.map2 Position
         (field "offsetX" int)
         (field "offsetY" int)
+
+
+onClickStopPropagation : Msg -> Attribute Msg
+onClickStopPropagation msg =
+    onWithOptions "click" stopPropagationOptions (Json.succeed msg)
 
 
 onMouseDownStopPropagation : (Position -> Msg) -> Attribute Msg

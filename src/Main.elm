@@ -51,7 +51,7 @@ update msg model =
             ( { model | editorMode = NodeEditMode (Just ( nodeId, newLabel )) }, Cmd.none )
 
         DeleteNode nodeId ->
-            ( { model | graph = Graph.remove nodeId model.graph, editorMode = NodeEditMode Nothing }, Cmd.none )
+            ( { model | graph = Graph.remove nodeId model.graph }, Cmd.none )
 
         SetMode mode ->
             ( { model | editorMode = mode }, Cmd.none )
@@ -97,15 +97,6 @@ insertNode node =
         , incoming = IntDict.empty
         , outgoing = IntDict.empty
         }
-
-
-debugView : ModelGraph -> Maybe Drag -> EditorMode -> Html Msg
-debugView graph draggedNode editorMode =
-    Html.ul []
-        [ Html.li [] [ Html.text <| "Nodes: " ++ toString (Graph.nodes graph) ]
-        , Html.li [] [ Html.text <| "Dragged node: " ++ toString draggedNode ]
-        , Html.li [] [ Html.text <| "Editor mode: " ++ toString editorMode ]
-        ]
 
 
 makeNode : Int -> Int -> Int -> String -> GraphNode
