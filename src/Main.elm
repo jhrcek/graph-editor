@@ -3,19 +3,21 @@ module Main exposing (..)
 import Graph exposing (Graph, NodeContext, NodeId)
 import GraphUtil exposing (updateLabelInNode, updateNodeInContext)
 import Html exposing (Html)
-import Html.Attributes
 import IntDict
 import Mouse exposing (Position)
-import Svg exposing (Svg)
-import SvgMouse
 import Types exposing (..)
-import Canvas
-import Forms.Node
+import View
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { graph = Graph.empty, newNodeId = 0, draggedNode = Nothing, editorMode = NodeEditMode Nothing }, Cmd.none )
+    ( { graph = Graph.empty
+      , newNodeId = 0
+      , draggedNode = Nothing
+      , editorMode = NodeEditMode Nothing
+      }
+    , Cmd.none
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -45,14 +47,14 @@ update msg model =
         NodeEditConfirm nodeId newLabel ->
             ( { model | graph = updateNodeLabel nodeId newLabel model.graph, editorMode = NodeEditMode Nothing }, Cmd.none )
 
-        NodeEditCancel ->
-            ( { model | editorMode = NodeEditMode Nothing }, Cmd.none )
-
         NodeLabelEdit nodeId newLabel ->
             ( { model | editorMode = NodeEditMode (Just ( nodeId, newLabel )) }, Cmd.none )
 
         DeleteNode nodeId ->
             ( { model | graph = Graph.remove nodeId model.graph, editorMode = NodeEditMode Nothing }, Cmd.none )
+
+        SetMode mode ->
+            ( { model | editorMode = mode }, Cmd.none )
 
 
 processDragMsg : DragMsg -> Model -> Model
@@ -80,20 +82,12 @@ updateDraggedNode drag graph =
 
 updateDraggedNodeInContext : Drag -> Maybe (NodeContext NodeLabel e) -> Maybe (NodeContext NodeLabel e)
 updateDraggedNodeInContext drag =
-    Maybe.map (updateNodeInContext (updateLabelInNode (getDraggedNodePosition drag)))
+    Maybe.map (updateNodeInContext (updateLabelInNode (Types.getDraggedNodePosition drag)))
 
 
 updateNodeLabel : NodeId -> String -> ModelGraph -> ModelGraph
 updateNodeLabel nodeId newNodeText graph =
     Graph.update nodeId (Maybe.map (updateNodeInContext (updateLabelInNode (\lbl -> { lbl | nodeText = newNodeText })))) graph
-
-
-getDraggedNodePosition : Drag -> NodeLabel -> NodeLabel
-getDraggedNodePosition { nodeId, start, current } nodeLabel =
-    { nodeLabel
-        | x = nodeLabel.x + current.x - start.x
-        , y = nodeLabel.y + current.y - start.y
-    }
 
 
 insertNode : GraphNode -> ModelGraph -> ModelGraph
@@ -105,58 +99,13 @@ insertNode node =
         }
 
 
-view : Model -> Html Msg
-view ({ graph, draggedNode } as model) =
-    Html.div []
-        [ viewCanvas graph draggedNode
-        , viewNodeForm model
-
-        --        , debugView graph draggedNode
-        ]
-
-
-debugView : ModelGraph -> Maybe Drag -> Html Msg
-debugView graph draggedNode =
+debugView : ModelGraph -> Maybe Drag -> EditorMode -> Html Msg
+debugView graph draggedNode editorMode =
     Html.ul []
         [ Html.li [] [ Html.text <| "Nodes: " ++ toString (Graph.nodes graph) ]
         , Html.li [] [ Html.text <| "Dragged node: " ++ toString draggedNode ]
+        , Html.li [] [ Html.text <| "Editor mode: " ++ toString editorMode ]
         ]
-
-
-viewCanvas : ModelGraph -> Maybe Drag -> Html Msg
-viewCanvas graph draggedNode =
-    Svg.svg
-        [ Html.Attributes.style [ ( "width", "100%" ), ( "height", "100%" ), ( "position", "fixed" ) ]
-        , SvgMouse.onCanvasMouseDown CanvasClicked
-        ]
-        (Graph.nodes graph |> List.map (viewNode draggedNode))
-
-
-viewNode : Maybe Drag -> GraphNode -> Svg Msg
-viewNode mDrag node =
-    let
-        labelMaybeAffectedByDrag =
-            case mDrag of
-                Just drag ->
-                    if drag.nodeId == node.id then
-                        getDraggedNodePosition drag node.label
-                    else
-                        node.label
-
-                Nothing ->
-                    node.label
-    in
-        Canvas.boxedText node.id labelMaybeAffectedByDrag
-
-
-viewNodeForm : Model -> Html Msg
-viewNodeForm { editorMode, graph } =
-    case editorMode of
-        NodeEditMode (Just ( nodeId, nodeText )) ->
-            Forms.Node.nodeForm nodeId nodeText
-
-        _ ->
-            Html.text ""
 
 
 makeNode : Int -> Int -> Int -> String -> GraphNode
@@ -189,5 +138,5 @@ main =
         { init = init
         , update = update
         , subscriptions = subscriptions
-        , view = view
+        , view = View.view
         }

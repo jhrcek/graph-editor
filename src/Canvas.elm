@@ -32,8 +32,8 @@ boxedText nodeId { x, y, nodeText } =
             [ rect
                 [ width (toString boxWidth)
                 , height (toString boxHeight)
-                , rx "2"
-                , ry "2"
+                , rx "4"
+                , ry "4"
                 , fill "white"
                 , stroke "black"
                 , strokeWidth "1"

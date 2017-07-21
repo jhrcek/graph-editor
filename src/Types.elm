@@ -8,6 +8,7 @@ module Types
         , NodeLabel
         , Drag
         , EditorMode(..)
+        , getDraggedNodePosition
         )
 
 import Mouse exposing (Position)
@@ -35,9 +36,9 @@ type Msg
     | NodeDrag DragMsg
     | NodeEditStart NodeId String
     | NodeEditConfirm NodeId String
-    | NodeEditCancel
     | NodeLabelEdit NodeId String
     | DeleteNode NodeId
+    | SetMode EditorMode
     | NoOp
 
 
@@ -65,3 +66,11 @@ type EditorMode
     = BrowsingMode
     | NodeEditMode (Maybe ( NodeId, String ))
     | EdgeEditMode
+
+
+getDraggedNodePosition : Drag -> NodeLabel -> NodeLabel
+getDraggedNodePosition { nodeId, start, current } nodeLabel =
+    { nodeLabel
+        | x = nodeLabel.x + current.x - start.x
+        , y = nodeLabel.y + current.y - start.y
+    }
