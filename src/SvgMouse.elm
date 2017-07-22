@@ -1,16 +1,20 @@
 module SvgMouse
     exposing
         ( onCanvasMouseDown
+        , onMouseDownGetPosition
         , onMouseDownStopPropagation
         , onDoubleClickStopPropagation
         , onClickStopPropagation
+        , onMouseUp
+        , onMouseUpUnselectStartNode
         )
 
 import Html exposing (Attribute)
 import Html.Events exposing (Options, defaultOptions, on, onWithOptions)
 import Json.Decode as Json exposing (field, int)
 import Mouse exposing (Position)
-import Types exposing (Msg)
+import Types exposing (Msg(..))
+import Svg.Events
 
 
 {- The aim of this module is to work around the fact, that click events fired
@@ -39,14 +43,29 @@ onClickStopPropagation msg =
     onWithOptions "click" stopPropagationOptions (Json.succeed msg)
 
 
-onMouseDownStopPropagation : (Position -> Msg) -> Attribute Msg
-onMouseDownStopPropagation tagger =
+onMouseDownGetPosition : (Position -> Msg) -> Attribute Msg
+onMouseDownGetPosition tagger =
     onWithOptions "mousedown" stopPropagationOptions (Json.map tagger Mouse.position)
+
+
+onMouseDownStopPropagation : Msg -> Attribute Msg
+onMouseDownStopPropagation msg =
+    onWithOptions "mousedown" stopPropagationOptions (Json.succeed msg)
 
 
 onDoubleClickStopPropagation : Msg -> Attribute Msg
 onDoubleClickStopPropagation msg =
     onWithOptions "dblclick" stopPropagationOptions (Json.succeed msg)
+
+
+onMouseUp : Msg -> Attribute Msg
+onMouseUp msg =
+    Svg.Events.onMouseUp msg
+
+
+onMouseUpUnselectStartNode : Attribute Msg
+onMouseUpUnselectStartNode =
+    Svg.Events.onMouseUp UnselectStartNodeOfEdge
 
 
 {-| options to prevent clicks on canvas nodes triggering click events on canvas itself

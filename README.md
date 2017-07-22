@@ -7,10 +7,8 @@ Simple editor for creating graphs implemented purely in Elm.
 - [x] Nodes are draggable
 - [x] Node text is editable - double clicking node opens node text field, enter confirms the edit
 - [x] Nodes can be deleted in Deletion mode - clicking node removes it from the graph
-- [ ] Edges can be created in Edge editing mode by either
-    - [ ] clicking on start node (which highlights it) and then clicking on end node. Clicking on start node again cancels the selection
-    - [ ] clicking and dragging from start node and releasing on end node. Releasing outside of node cancels the edge creation.
-- [ ] Edges are editable - double clicking edge opens edge edit form. The form enables setting edge label or deleting the edge.
+- [x] Edges can be created in Edge editing mode by clicking and dragging from start node and releasing on end node. Releasing outside of node cancels edge creation.
+- [ ] Edges are editable - double clicking edge opens edge edit form. The form enables setting edge label.
 - [ ] Browsing mode enables
     - [ ] viewing graphs
     - [ ] rearranging nodes via drag and drop

@@ -4,10 +4,13 @@ module GraphUtil
         , updateLabelInNode
         , setNodeText
         , insertNode
+        , insertEdge
+        , crashIfNodeNotInGraph
+        , getNode
         )
 
-import Graph exposing (Node, NodeContext)
-import Types exposing (GraphNode, ModelGraph)
+import Graph exposing (Node, NodeContext, NodeId)
+import Types exposing (GraphNode, ModelGraph, NodeLabel)
 import IntDict
 
 
@@ -33,3 +36,30 @@ insertNode node =
         , incoming = IntDict.empty
         , outgoing = IntDict.empty
         }
+
+
+insertEdge : NodeId -> NodeId -> ModelGraph -> ModelGraph
+insertEdge from to graph =
+    let
+        insertOutgoingEdge : NodeId -> NodeContext NodeLabel () -> NodeContext NodeLabel ()
+        insertOutgoingEdge toId oldContext =
+            { oldContext
+                | outgoing = IntDict.insert toId () oldContext.outgoing
+            }
+    in
+        Graph.update from (Maybe.map (insertOutgoingEdge to)) graph
+
+
+crashIfNodeNotInGraph : NodeId -> Maybe GraphNode -> GraphNode
+crashIfNodeNotInGraph nodeId mGraphNode =
+    case mGraphNode of
+        Nothing ->
+            Debug.crash <| "Node with id " ++ toString nodeId ++ " was not in the graph"
+
+        Just node ->
+            node
+
+
+getNode : NodeId -> ModelGraph -> GraphNode
+getNode nodeId graph =
+    Graph.get nodeId graph |> Maybe.map (.node) |> crashIfNodeNotInGraph nodeId

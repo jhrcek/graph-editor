@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Graph exposing (Graph, NodeContext, NodeId)
-import GraphUtil exposing (setNodeText, updateLabelInNode, updateNodeInContext)
+import GraphUtil exposing (crashIfNodeNotInGraph, setNodeText, updateLabelInNode, updateNodeInContext)
 import Html exposing (Html)
 import Mouse exposing (Position)
 import Types exposing (..)
@@ -43,7 +43,7 @@ update msg model =
         NodeEditStart nodeId ->
             let
                 editedNode =
-                    Graph.get nodeId model.graph |> Maybe.map .node |> crashIfNodeNotInGraph nodeId
+                    GraphUtil.getNode nodeId model.graph
             in
                 ( { model | editorMode = NodeEditMode (Just editedNode) }, Cmd.none )
 
@@ -61,6 +61,24 @@ update msg model =
                             model.editorMode
             in
                 ( { model | editorMode = newEditorMode }, Cmd.none )
+
+        StartNodeOfEdgeSelected nodeId ->
+            ( { model | editorMode = EdgeEditMode (FromSelected nodeId) }, Cmd.none )
+
+        EndNodeOfEdgeSelected endNodeId ->
+            let
+                newGraph =
+                    case model.editorMode of
+                        EdgeEditMode (FromSelected startNodeId) ->
+                            GraphUtil.insertEdge startNodeId endNodeId model.graph
+
+                        _ ->
+                            model.graph
+            in
+                ( { model | graph = newGraph, editorMode = EdgeEditMode NothingSelected }, Cmd.none )
+
+        UnselectStartNodeOfEdge ->
+            ( { model | editorMode = EdgeEditMode NothingSelected }, Cmd.none )
 
         DeleteNode nodeId ->
             ( { model | graph = Graph.remove nodeId model.graph }, Cmd.none )
@@ -111,16 +129,6 @@ makeNode id x y nodeText =
         , y = y
         }
     }
-
-
-crashIfNodeNotInGraph : NodeId -> Maybe GraphNode -> GraphNode
-crashIfNodeNotInGraph nodeId mGraphNode =
-    case mGraphNode of
-        Nothing ->
-            Debug.crash <| "Node with id " ++ toString nodeId ++ " was not in the graph"
-
-        Just node ->
-            node
 
 
 subscriptions : Model -> Sub Msg

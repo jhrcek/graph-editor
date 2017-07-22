@@ -8,6 +8,9 @@ module Types
         , NodeLabel
         , Drag
         , EditorMode(..)
+        , isNodeEditMode
+        , isEdgeEditMode
+        , EdgeEditState(..)
         , getDraggedNodePosition
         )
 
@@ -34,10 +37,17 @@ type alias GraphNode =
 type Msg
     = CanvasClicked Position
     | NodeDrag DragMsg
+      -- Node creation
     | NodeEditStart NodeId
     | NodeEditConfirm NodeId String
     | NodeLabelEdit NodeId String
+      -- Edge creation
+    | StartNodeOfEdgeSelected NodeId
+    | EndNodeOfEdgeSelected NodeId
+    | UnselectStartNodeOfEdge
+      --
     | DeleteNode NodeId
+      -- Changing modes
     | SetMode EditorMode
     | NoOp
 
@@ -65,8 +75,33 @@ type alias NodeLabel =
 type EditorMode
     = BrowsingMode
     | NodeEditMode (Maybe GraphNode)
-    | EdgeEditMode
+    | EdgeEditMode EdgeEditState
     | DeletionMode
+
+
+isNodeEditMode : EditorMode -> Bool
+isNodeEditMode mode =
+    case mode of
+        NodeEditMode _ ->
+            True
+
+        _ ->
+            False
+
+
+isEdgeEditMode : EditorMode -> Bool
+isEdgeEditMode mode =
+    case mode of
+        EdgeEditMode _ ->
+            True
+
+        _ ->
+            False
+
+
+type EdgeEditState
+    = NothingSelected
+    | FromSelected NodeId
 
 
 getDraggedNodePosition : Drag -> NodeLabel -> NodeLabel
