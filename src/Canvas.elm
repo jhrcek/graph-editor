@@ -32,7 +32,7 @@ boxedText nodeId { x, y, nodeText } editorMode =
 
                 NodeEditMode _ ->
                     [ onClickStartDrag nodeId
-                    , onDoubleClickStartEdit nodeId nodeText
+                    , onDoubleClickStartEdit nodeId
                     ]
 
                 EdgeEditMode ->
@@ -72,9 +72,9 @@ boxedText nodeId { x, y, nodeText } editorMode =
             ]
 
 
-onDoubleClickStartEdit : NodeId -> String -> Svg.Attribute Msg
-onDoubleClickStartEdit nodeId nodeText =
-    SvgMouse.onDoubleClickStopPropagation (NodeEditStart nodeId nodeText)
+onDoubleClickStartEdit : NodeId -> Svg.Attribute Msg
+onDoubleClickStartEdit nodeId =
+    SvgMouse.onDoubleClickStopPropagation (NodeEditStart nodeId)
 
 
 onClickStartDrag : NodeId -> Svg.Attribute Msg

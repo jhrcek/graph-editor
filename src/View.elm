@@ -57,11 +57,24 @@ viewNode mDrag editorMode node =
 viewNodeForm : Model -> Html Msg
 viewNodeForm { editorMode, graph } =
     case editorMode of
-        NodeEditMode (Just ( nodeId, nodeText )) ->
-            nodeForm nodeId nodeText
+        NodeEditMode (Just node) ->
+            nodeForm node.id node.label.nodeText node.label.x node.label.y
 
         _ ->
             Html.text ""
+
+
+
+-- This has size 246 x 38 TODO de-hard code the values
+
+
+nodeForm : NodeId -> String -> Int -> Int -> Html Msg
+nodeForm nodeId nodeText x y =
+    div [ class "card", style [ ( "width", "18rem" ), ( "position", "absolute" ), ( "left", toString (x - 246 // 2) ++ "px" ), ( "top", toString (y - 38 // 2) ++ "px" ) ] ]
+        [ form [ class "card-block input-group", onSubmit (NodeEditConfirm nodeId nodeText) ]
+            [ input [ class "form-control", placeholder "Node text", type_ "text", autofocus True, value nodeText, onInput (NodeLabelEdit nodeId) ] []
+            ]
+        ]
 
 
 controlsPanel : EditorMode -> Html Msg
@@ -90,12 +103,3 @@ modeView : Bool -> String -> EditorMode -> Html Msg
 modeView isActive modeText mode =
     li [ classList [ ( "list-group-item", True ), ( "active", isActive ) ], onClick (SetMode mode) ]
         [ text modeText ]
-
-
-nodeForm : NodeId -> String -> Html Msg
-nodeForm nodeId nodeText =
-    div [ class "card", style [ ( "width", "18rem" ) ] ]
-        [ form [ class "card-block input-group", onSubmit (NodeEditConfirm nodeId nodeText) ]
-            [ input [ class "form-control", placeholder "Node text", type_ "text", autofocus True, value nodeText, onInput (NodeLabelEdit nodeId) ] []
-            ]
-        ]

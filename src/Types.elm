@@ -34,7 +34,7 @@ type alias GraphNode =
 type Msg
     = CanvasClicked Position
     | NodeDrag DragMsg
-    | NodeEditStart NodeId String
+    | NodeEditStart NodeId
     | NodeEditConfirm NodeId String
     | NodeLabelEdit NodeId String
     | DeleteNode NodeId
@@ -64,7 +64,7 @@ type alias NodeLabel =
 
 type EditorMode
     = BrowsingMode
-    | NodeEditMode (Maybe ( NodeId, String ))
+    | NodeEditMode (Maybe GraphNode)
     | EdgeEditMode
     | DeletionMode
 

@@ -1,9 +1,8 @@
 module Main exposing (..)
 
 import Graph exposing (Graph, NodeContext, NodeId)
-import GraphUtil exposing (updateLabelInNode, updateNodeInContext)
+import GraphUtil exposing (setNodeText, updateLabelInNode, updateNodeInContext)
 import Html exposing (Html)
-import IntDict
 import Mouse exposing (Position)
 import Types exposing (..)
 import View
@@ -29,7 +28,7 @@ update msg model =
                     makeNode model.newNodeId x y ""
 
                 newGraph =
-                    insertNode newNode model.graph
+                    GraphUtil.insertNode newNode model.graph
             in
                 ( { model | graph = newGraph, newNodeId = model.newNodeId + 1 }
                 , Cmd.none
@@ -41,14 +40,27 @@ update msg model =
         NoOp ->
             ( model, Cmd.none )
 
-        NodeEditStart nodeId nodeText ->
-            ( { model | editorMode = NodeEditMode (Just ( nodeId, nodeText )) }, Cmd.none )
+        NodeEditStart nodeId ->
+            let
+                editedNode =
+                    Graph.get nodeId model.graph |> Maybe.map .node |> crashIfNodeNotInGraph nodeId
+            in
+                ( { model | editorMode = NodeEditMode (Just editedNode) }, Cmd.none )
 
         NodeEditConfirm nodeId newLabel ->
             ( { model | graph = updateNodeLabel nodeId newLabel model.graph, editorMode = NodeEditMode Nothing }, Cmd.none )
 
-        NodeLabelEdit nodeId newLabel ->
-            ( { model | editorMode = NodeEditMode (Just ( nodeId, newLabel )) }, Cmd.none )
+        NodeLabelEdit nodeId newNodeText ->
+            let
+                newEditorMode =
+                    case model.editorMode of
+                        NodeEditMode (Just node) ->
+                            NodeEditMode <| Just <| setNodeText newNodeText node
+
+                        _ ->
+                            model.editorMode
+            in
+                ( { model | editorMode = newEditorMode }, Cmd.none )
 
         DeleteNode nodeId ->
             ( { model | graph = Graph.remove nodeId model.graph }, Cmd.none )
@@ -87,16 +99,7 @@ updateDraggedNodeInContext drag =
 
 updateNodeLabel : NodeId -> String -> ModelGraph -> ModelGraph
 updateNodeLabel nodeId newNodeText graph =
-    Graph.update nodeId (Maybe.map (updateNodeInContext (updateLabelInNode (\lbl -> { lbl | nodeText = newNodeText })))) graph
-
-
-insertNode : GraphNode -> ModelGraph -> ModelGraph
-insertNode node =
-    Graph.insert
-        { node = node
-        , incoming = IntDict.empty
-        , outgoing = IntDict.empty
-        }
+    Graph.update nodeId (Maybe.map (updateNodeInContext (GraphUtil.setNodeText newNodeText))) graph
 
 
 makeNode : Int -> Int -> Int -> String -> GraphNode
@@ -108,6 +111,16 @@ makeNode id x y nodeText =
         , y = y
         }
     }
+
+
+crashIfNodeNotInGraph : NodeId -> Maybe GraphNode -> GraphNode
+crashIfNodeNotInGraph nodeId mGraphNode =
+    case mGraphNode of
+        Nothing ->
+            Debug.crash <| "Node with id " ++ toString nodeId ++ " was not in the graph"
+
+        Just node ->
+            node
 
 
 subscriptions : Model -> Sub Msg
