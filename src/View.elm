@@ -43,7 +43,7 @@ viewCanvas editorMode graph draggedNode =
         edgesView =
             Graph.edges graph |> List.map (viewEdge graph draggedNode)
     in
-        Svg.svg svgElemAttributes <| edgesView ++ nodesView
+        Svg.svg svgElemAttributes <| Canvas.arrowHeadMarkerDefs :: edgesView ++ nodesView
 
 
 viewNode : Maybe Drag -> EditorMode -> GraphNode -> Svg Msg
@@ -64,7 +64,7 @@ viewEdge graph mDrag edge =
         toNodeLabel =
             GraphUtil.getNode edge.to graph |> applyDrag mDrag
     in
-        Canvas.edgeLine fromNodeLabel.x fromNodeLabel.y toNodeLabel.x toNodeLabel.y
+        Canvas.edgeArrow fromNodeLabel.x fromNodeLabel.y toNodeLabel
 
 
 applyDrag : Maybe Drag -> GraphNode -> NodeLabel

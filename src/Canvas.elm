@@ -1,8 +1,8 @@
-module Canvas exposing (boxedText, edgeLine)
+module Canvas exposing (boxedText, edgeArrow, arrowHeadMarkerDefs)
 
 import Graph exposing (NodeId)
 import Svg exposing (Svg, g, rect, text, text_)
-import Svg.Attributes exposing (alignmentBaseline, fill, fontFamily, fontSize, height, name, rx, ry, stroke, strokeWidth, style, textAnchor, transform, width, x, x1, x2, y, y1, y2)
+import Svg.Attributes exposing (alignmentBaseline, d, fill, fontFamily, fontSize, height, id, markerEnd, markerHeight, markerUnits, markerWidth, name, orient, refX, refY, rx, ry, stroke, strokeWidth, style, textAnchor, transform, width, x, x1, x2, y, y1, y2)
 import SvgMouse
 import Types exposing (..)
 
@@ -13,11 +13,8 @@ boxedText nodeId { x, y, nodeText } editorMode =
         tranformValue =
             "translate(" ++ toString (x - boxCenterX) ++ "," ++ toString (y - boxCenterY) ++ ")"
 
-        textContentWidth =
-            characterWidthPixels * String.length nodeText
-
         boxWidth =
-            textContentWidth + 20
+            getBoxWidth nodeText
 
         boxCenterX =
             boxWidth // 2
@@ -29,7 +26,7 @@ boxedText nodeId { x, y, nodeText } editorMode =
             case editorMode of
                 EdgeEditMode (FromSelected selectedNodeId) ->
                     if nodeId == selectedNodeId then
-                        fill "grey"
+                        fill "lightgray"
                     else
                         fill "white"
 
@@ -94,17 +91,68 @@ boxedText nodeId { x, y, nodeText } editorMode =
             ]
 
 
-edgeLine : Int -> Int -> Int -> Int -> Svg Msg
-edgeLine xFrom yFrom xTo yTo =
-    Svg.line
-        [ x1 (toString xFrom)
-        , y1 (toString yFrom)
-        , x2 (toString xTo)
-        , y2 (toString yTo)
-        , stroke "black"
-        , strokeWidth "1"
+getBoxWidth : String -> Int
+getBoxWidth nodeText =
+    (characterWidthPixels * String.length nodeText) + 20
+
+
+edgeArrow : Int -> Int -> NodeLabel -> Svg Msg
+edgeArrow xFrom yFrom ({ x, y, nodeText } as targetNodeLabel) =
+    let
+        edgeIncomingAngle =
+            atan2 (toFloat (y - yFrom)) (toFloat (xFrom - x))
+
+        boxWidth =
+            getBoxWidth nodeText
+
+        criticalAngle =
+            determineAngle boxWidth boxHeight
+
+        whichSideOfTargetBoxToPointTo =
+            determineSide criticalAngle edgeIncomingAngle
+
+        ( arrowHeadX, arrowHeadY ) =
+            let
+                yCorrection =
+                    round (toFloat (boxWidth // 2) * tan edgeIncomingAngle)
+
+                xCorrection =
+                    round (toFloat (boxHeight // 2) / tan edgeIncomingAngle)
+            in
+                case whichSideOfTargetBoxToPointTo of
+                    BRight ->
+                        ( x + boxWidth // 2, y - yCorrection )
+
+                    BLeft ->
+                        ( x - boxWidth // 2, y + yCorrection )
+
+                    BTop ->
+                        ( x + xCorrection, y - boxHeight // 2 )
+
+                    BBottom ->
+                        ( x - xCorrection, y + boxHeight // 2 )
+    in
+        Svg.line
+            [ x1 (toString xFrom)
+            , y1 (toString yFrom)
+            , x2 (toString arrowHeadX)
+            , y2 (toString arrowHeadY)
+            , stroke "black"
+            , strokeWidth "1"
+            , markerEnd "url(#arrow)"
+            ]
+            []
+
+
+{-| Arrowhead to be reused by all edges, inspired by <http://vanseodesign.com/web-design/svg-markers/>
+-}
+arrowHeadMarkerDefs : Svg a
+arrowHeadMarkerDefs =
+    Svg.defs []
+        [ Svg.marker [ id "arrow", markerWidth "15", markerHeight "6", refX "15", refY "3", orient "auto", markerUnits "strokeWidth" ]
+            [ Svg.path [ d "M0,0 L0,6 L15,3 z", fill "black" ] []
+            ]
         ]
-        []
 
 
 onDoubleClickStartEdit : NodeId -> Svg.Attribute Msg
@@ -150,3 +198,31 @@ characterHeightPixels =
 boxHeight : Int
 boxHeight =
     characterHeightPixels * 2
+
+
+{-| Determine which side of the box we should draw arrowhead of incomming edge
+We first find "critical angle" (angle between x axis and line from box center to its upper right corner.
+Based on that we determine which side of the box the arrowhead should point.
+-}
+type BoxSide
+    = BRight
+    | BTop
+    | BLeft
+    | BBottom
+
+
+determineAngle : Int -> Int -> Float
+determineAngle boxWidth boxHeight =
+    atan2 (toFloat boxHeight) (toFloat boxWidth)
+
+
+determineSide : Float -> Float -> BoxSide
+determineSide boxCriticalAngle edgeIncomingAngle =
+    if -boxCriticalAngle < edgeIncomingAngle && edgeIncomingAngle <= boxCriticalAngle then
+        BRight
+    else if boxCriticalAngle < edgeIncomingAngle && edgeIncomingAngle <= (Basics.pi - boxCriticalAngle) then
+        BTop
+    else if (-Basics.pi + boxCriticalAngle) < edgeIncomingAngle && edgeIncomingAngle <= -boxCriticalAngle then
+        BBottom
+    else
+        BLeft
