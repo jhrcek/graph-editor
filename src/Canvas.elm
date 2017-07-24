@@ -1,4 +1,4 @@
-module Canvas exposing (boxedText, edgeArrow, arrowHeadMarkerDefs)
+module Canvas exposing (boxedText, edgeArrow, drawEdge, arrowHeadMarkerDefs)
 
 import Graph exposing (NodeId)
 import Svg exposing (Svg, g, rect, text, text_)
@@ -24,7 +24,7 @@ boxedText nodeId { x, y, nodeText } editorMode =
 
         nodeFill =
             case editorMode of
-                EdgeEditMode (FromSelected selectedNodeId) ->
+                EdgeEditMode (FromSelected selectedNodeId _) ->
                     if nodeId == selectedNodeId then
                         fill "lightgray"
                     else
@@ -48,7 +48,7 @@ boxedText nodeId { x, y, nodeText } editorMode =
                         NothingSelected ->
                             [ onMouseDownSelectStartingNode nodeId ]
 
-                        FromSelected selectedNodeId ->
+                        FromSelected selectedNodeId _ ->
                             if nodeId /= selectedNodeId then
                                 [ onMouseUpCreateEdge nodeId ]
                             else
@@ -132,16 +132,21 @@ edgeArrow xFrom yFrom ({ x, y, nodeText } as targetNodeLabel) =
                     BBottom ->
                         ( x - xCorrection, y + boxHeight // 2 )
     in
-        Svg.line
-            [ x1 (toString xFrom)
-            , y1 (toString yFrom)
-            , x2 (toString arrowHeadX)
-            , y2 (toString arrowHeadY)
-            , stroke "black"
-            , strokeWidth "1"
-            , markerEnd "url(#arrow)"
-            ]
-            []
+        drawEdge xFrom yFrom arrowHeadX arrowHeadY
+
+
+drawEdge : Int -> Int -> Int -> Int -> Svg Msg
+drawEdge xFrom yFrom xTo yTo =
+    Svg.line
+        [ x1 (toString xFrom)
+        , y1 (toString yFrom)
+        , x2 (toString xTo)
+        , y2 (toString yTo)
+        , stroke "black"
+        , strokeWidth "1"
+        , markerEnd "url(#arrow)"
+        ]
+        []
 
 
 {-| Arrowhead to be reused by all edges, inspired by <http://vanseodesign.com/web-design/svg-markers/>

@@ -63,13 +63,17 @@ update msg model =
                 ( { model | editorMode = newEditorMode }, Cmd.none )
 
         StartNodeOfEdgeSelected nodeId ->
-            ( { model | editorMode = EdgeEditMode (FromSelected nodeId) }, Cmd.none )
+            let
+                selectedNodeLabel =
+                    GraphUtil.getNode nodeId model.graph |> .label
+            in
+                ( { model | editorMode = EdgeEditMode (FromSelected nodeId { x = selectedNodeLabel.x, y = selectedNodeLabel.y }) }, Cmd.none )
 
         EndNodeOfEdgeSelected endNodeId ->
             let
                 newGraph =
                     case model.editorMode of
-                        EdgeEditMode (FromSelected startNodeId) ->
+                        EdgeEditMode (FromSelected startNodeId _) ->
                             GraphUtil.insertEdge startNodeId endNodeId model.graph
 
                         _ ->
@@ -80,11 +84,28 @@ update msg model =
         UnselectStartNodeOfEdge ->
             ( { model | editorMode = EdgeEditMode NothingSelected }, Cmd.none )
 
+        PreviewEdgeEndpointPositionChanged mousePosition ->
+            ( setMousePositionIfCreatingEdge mousePosition model, Cmd.none )
+
         DeleteNode nodeId ->
             ( { model | graph = Graph.remove nodeId model.graph }, Cmd.none )
 
         SetMode mode ->
             ( { model | editorMode = mode }, Cmd.none )
+
+
+setMousePositionIfCreatingEdge : Mouse.Position -> Model -> Model
+setMousePositionIfCreatingEdge mousePosition model =
+    let
+        newEditorMode =
+            case model.editorMode of
+                EdgeEditMode (FromSelected nodeId _) ->
+                    EdgeEditMode (FromSelected nodeId mousePosition)
+
+                _ ->
+                    model.editorMode
+    in
+        { model | editorMode = newEditorMode }
 
 
 processDragMsg : DragMsg -> Model -> Model
@@ -133,7 +154,15 @@ makeNode id x y nodeText =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model.draggedNode of
+    Sub.batch
+        [ nodeDragDropSubscriptions model.draggedNode
+        , edgeCreationSubscriptions model.editorMode
+        ]
+
+
+nodeDragDropSubscriptions : Maybe Drag -> Sub Msg
+nodeDragDropSubscriptions maybeDrag =
+    case maybeDrag of
         Nothing ->
             Sub.none
 
@@ -142,6 +171,16 @@ subscriptions model =
                 [ Mouse.moves (NodeDrag << DragAt)
                 , Mouse.ups (NodeDrag << DragEnd)
                 ]
+
+
+edgeCreationSubscriptions : EditorMode -> Sub Msg
+edgeCreationSubscriptions editorMode =
+    case editorMode of
+        EdgeEditMode (FromSelected _ _) ->
+            Mouse.moves PreviewEdgeEndpointPositionChanged
+
+        _ ->
+            Sub.none
 
 
 main : Program Never Model Msg

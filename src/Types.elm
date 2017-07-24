@@ -45,6 +45,7 @@ type Msg
     | StartNodeOfEdgeSelected NodeId
     | EndNodeOfEdgeSelected NodeId
     | UnselectStartNodeOfEdge
+    | PreviewEdgeEndpointPositionChanged Mouse.Position
       --
     | DeleteNode NodeId
       -- Changing modes
@@ -101,7 +102,7 @@ isEdgeEditMode mode =
 
 type EdgeEditState
     = NothingSelected
-    | FromSelected NodeId
+    | FromSelected NodeId Mouse.Position
 
 
 getDraggedNodePosition : Drag -> NodeLabel -> NodeLabel

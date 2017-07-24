@@ -28,7 +28,7 @@ viewCanvas editorMode graph draggedNode =
                 NodeEditMode _ ->
                     [ SvgMouse.onCanvasMouseDown CanvasClicked ]
 
-                EdgeEditMode (FromSelected _) ->
+                EdgeEditMode (FromSelected _ _) ->
                     [ SvgMouse.onMouseUpUnselectStartNode ]
 
                 _ ->
@@ -42,8 +42,25 @@ viewCanvas editorMode graph draggedNode =
 
         edgesView =
             Graph.edges graph |> List.map (viewEdge graph draggedNode)
+
+        edgeBeingCreated =
+            getEdgeBeingCreated editorMode graph
     in
-        Svg.svg svgElemAttributes <| Canvas.arrowHeadMarkerDefs :: edgesView ++ nodesView
+        Svg.svg svgElemAttributes <| Canvas.arrowHeadMarkerDefs :: edgeBeingCreated :: edgesView ++ nodesView
+
+
+getEdgeBeingCreated : EditorMode -> ModelGraph -> Svg Msg
+getEdgeBeingCreated editorMode graph =
+    case editorMode of
+        EdgeEditMode (FromSelected nodeId mousePosition) ->
+            let
+                { x, y } =
+                    GraphUtil.getNode nodeId graph |> .label
+            in
+                Canvas.drawEdge x y mousePosition.x mousePosition.y
+
+        _ ->
+            Svg.text ""
 
 
 viewNode : Maybe Drag -> EditorMode -> GraphNode -> Svg Msg
