@@ -35,7 +35,7 @@ type alias GraphNode =
 
 
 type Msg
-    = CanvasClicked Position
+    = CreateNode Position
     | NodeDrag DragMsg
       -- Node creation
     | NodeEditStart NodeId

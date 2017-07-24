@@ -26,7 +26,7 @@ viewCanvas editorMode graph draggedNode =
         canvasEventListeners =
             case editorMode of
                 NodeEditMode _ ->
-                    [ SvgMouse.onCanvasMouseDown CanvasClicked ]
+                    [ SvgMouse.onCanvasMouseDown CreateNode ]
 
                 EdgeEditMode (FromSelected _ _) ->
                     [ SvgMouse.onMouseUpUnselectStartNode ]

@@ -22,7 +22,7 @@ init =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        CanvasClicked { x, y } ->
+        CreateNode { x, y } ->
             let
                 newNode =
                     makeNode model.newNodeId x y ""
