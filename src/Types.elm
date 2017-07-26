@@ -105,6 +105,10 @@ type EdgeEditState
     | FromSelected NodeId Mouse.Position
 
 
+
+--| EdgeHover
+
+
 getDraggedNodePosition : Drag -> NodeLabel -> NodeLabel
 getDraggedNodePosition { nodeId, start, current } nodeLabel =
     { nodeLabel
