@@ -81,7 +81,7 @@ viewEdge graph mDrag edge =
         toNodeLabel =
             GraphUtil.getNode edge.to graph |> applyDrag mDrag
     in
-        Canvas.edgeArrow fromNodeLabel.x fromNodeLabel.y toNodeLabel
+        Canvas.edgeArrow edge fromNodeLabel toNodeLabel
 
 
 applyDrag : Maybe Drag -> GraphNode -> NodeLabel

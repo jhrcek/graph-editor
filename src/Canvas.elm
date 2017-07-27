@@ -36,7 +36,7 @@ boxedText nodeId { x, y, nodeText } editorMode =
         modeDependentAttributes =
             case editorMode of
                 BrowsingMode ->
-                    [ onClickStartDrag nodeId ]
+                    [ onClickStartDrag nodeId, style "cursor: move;" ]
 
                 NodeEditMode _ ->
                     [ onClickStartDrag nodeId
@@ -96,11 +96,11 @@ getBoxWidth nodeText =
     (characterWidthPixels * String.length nodeText) + 20
 
 
-edgeArrow : Int -> Int -> NodeLabel -> Svg Msg
-edgeArrow xFrom yFrom ({ x, y, nodeText } as targetNodeLabel) =
+edgeArrow : Graph.Edge () -> NodeLabel -> NodeLabel -> Svg Msg
+edgeArrow edge fromLabel ({ x, y, nodeText } as toLabel) =
     let
         edgeIncomingAngle =
-            atan2 (toFloat (y - yFrom)) (toFloat (xFrom - x))
+            atan2 (toFloat (y - fromLabel.y)) (toFloat (fromLabel.x - x))
 
         boxWidth =
             getBoxWidth nodeText
@@ -132,7 +132,7 @@ edgeArrow xFrom yFrom ({ x, y, nodeText } as targetNodeLabel) =
                     BBottom ->
                         ( x - xCorrection, y + boxHeight // 2 )
     in
-        drawEdge xFrom yFrom arrowHeadX arrowHeadY
+        drawEdge fromLabel.x fromLabel.y arrowHeadX arrowHeadY
 
 
 drawEdge : Int -> Int -> Int -> Int -> Svg Msg
