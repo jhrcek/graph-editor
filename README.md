@@ -19,7 +19,7 @@ Simple editor for creating graphs implemented purely in Elm.
 # TODOs
 - [x] when drawing edges, pass the entire nodes, not just their coordinates
 - [ ] Introduce new EdgeHover EdgeEditState holding NodeId of its 2 endpoints
-- [ ] Add new invisible line behind visible edge which will receive mouse hover events
+- [x] Add new invisible line behind visible edge which will receive mouse hover events
     - [ ] doubleclicking it will open edge edit form in the middle of the edge
-    - [ ] clicking it in deletion mode will remove it
+    - [x] clicking it in deletion mode will remove it
 - [ ] Add svg text centered at the middle of the edge to render edge

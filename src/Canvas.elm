@@ -7,14 +7,14 @@ import SvgMouse
 import Types exposing (..)
 
 
-boxedText : NodeId -> NodeLabel -> EditorMode -> Svg Msg
-boxedText nodeId { x, y, nodeText } editorMode =
+boxedText : GraphNode -> EditorMode -> Svg Msg
+boxedText { id, label } editorMode =
     let
         tranformValue =
-            "translate(" ++ toString (x - boxCenterX) ++ "," ++ toString (y - boxCenterY) ++ ")"
+            "translate(" ++ toString (label.x - boxCenterX) ++ "," ++ toString (label.y - boxCenterY) ++ ")"
 
         boxWidth =
-            getBoxWidth nodeText
+            getBoxWidth label.nodeText
 
         boxCenterX =
             boxWidth // 2
@@ -25,7 +25,7 @@ boxedText nodeId { x, y, nodeText } editorMode =
         nodeFill =
             case editorMode of
                 EdgeEditMode (FromSelected selectedNodeId _) ->
-                    if nodeId == selectedNodeId then
+                    if id == selectedNodeId then
                         fill "lightgray"
                     else
                         fill "white"
@@ -36,30 +36,30 @@ boxedText nodeId { x, y, nodeText } editorMode =
         modeDependentAttributes =
             case editorMode of
                 BrowsingMode ->
-                    [ onClickStartDrag nodeId, style "cursor: move;" ]
+                    [ onClickStartDrag id, style "cursor: move;" ]
 
                 NodeEditMode _ ->
-                    [ onClickStartDrag nodeId
-                    , onDoubleClickStartEdit nodeId
+                    [ onClickStartDrag id
+                    , onDoubleClickStartEdit id
                     ]
 
                 EdgeEditMode edgeEditState ->
                     case edgeEditState of
                         NothingSelected ->
-                            [ onMouseDownSelectStartingNode nodeId ]
+                            [ onMouseDownSelectStartingNode id ]
 
                         FromSelected selectedNodeId _ ->
-                            if nodeId /= selectedNodeId then
-                                [ onMouseUpCreateEdge nodeId ]
+                            if id /= selectedNodeId then
+                                [ onMouseUpCreateEdge id ]
                             else
                                 [ SvgMouse.onMouseUpUnselectStartNode ]
 
                 DeletionMode ->
-                    [ onClickDeleteNode nodeId, style "cursor: not-allowed;" ]
+                    [ onClickDeleteNode id, style "cursor: not-allowed;" ]
     in
         g
             [ transform tranformValue
-            , name (toString nodeId)
+            , name (toString id)
             ]
             [ rect
                 ([ width (toString boxWidth)
@@ -87,7 +87,7 @@ boxedText nodeId { x, y, nodeText } editorMode =
                  ]
                     ++ modeDependentAttributes
                 )
-                [ text nodeText ]
+                [ text label.nodeText ]
             ]
 
 
@@ -96,11 +96,14 @@ getBoxWidth nodeText =
     (characterWidthPixels * String.length nodeText) + 20
 
 
-edgeArrow : Graph.Edge () -> NodeLabel -> NodeLabel -> Svg Msg
-edgeArrow edge fromLabel ({ x, y, nodeText } as toLabel) =
+edgeArrow : Graph.Edge () -> GraphNode -> GraphNode -> EditorMode -> Svg Msg
+edgeArrow edge fromNode toNode editorMode =
     let
+        { x, y, nodeText } =
+            toNode.label
+
         edgeIncomingAngle =
-            atan2 (toFloat (y - fromLabel.y)) (toFloat (fromLabel.x - x))
+            atan2 (toFloat (y - fromNode.label.y)) (toFloat (fromNode.label.x - x))
 
         boxWidth =
             getBoxWidth nodeText
@@ -131,22 +134,32 @@ edgeArrow edge fromLabel ({ x, y, nodeText } as toLabel) =
 
                     BBottom ->
                         ( x - xCorrection, y + boxHeight // 2 )
+
+        modeDependentAttributes =
+            case editorMode of
+                DeletionMode ->
+                    [ onClickDeleteEdge fromNode.id toNode.id, style "cursor: not-allowed;" ]
+
+                _ ->
+                    []
     in
-        drawEdge fromLabel.x fromLabel.y arrowHeadX arrowHeadY
+        drawEdge fromNode.label arrowHeadX arrowHeadY modeDependentAttributes
 
 
-drawEdge : Int -> Int -> Int -> Int -> Svg Msg
-drawEdge xFrom yFrom xTo yTo =
-    Svg.line
-        [ x1 (toString xFrom)
-        , y1 (toString yFrom)
-        , x2 (toString xTo)
-        , y2 (toString yTo)
-        , stroke "black"
-        , strokeWidth "1"
-        , markerEnd "url(#arrow)"
-        ]
-        []
+drawEdge : NodeLabel -> Int -> Int -> List (Svg.Attribute Msg) -> Svg Msg
+drawEdge fromLabel xTo yTo attrList =
+    let
+        coordAttrs =
+            [ x1 (toString fromLabel.x)
+            , y1 (toString fromLabel.y)
+            , x2 (toString xTo)
+            , y2 (toString yTo)
+            ]
+    in
+        g attrList
+            [ Svg.line (coordAttrs ++ [ stroke "transparent", strokeWidth "6" ]) []
+            , Svg.line (coordAttrs ++ [ stroke "black", strokeWidth "1", markerEnd "url(#arrow)" ]) []
+            ]
 
 
 {-| Arrowhead to be reused by all edges, inspired by <http://vanseodesign.com/web-design/svg-markers/>
@@ -173,6 +186,11 @@ onClickStartDrag nodeId =
 onClickDeleteNode : NodeId -> Svg.Attribute Msg
 onClickDeleteNode nodeId =
     SvgMouse.onClickStopPropagation (DeleteNode nodeId)
+
+
+onClickDeleteEdge : NodeId -> NodeId -> Svg.Attribute Msg
+onClickDeleteEdge from to =
+    SvgMouse.onClickStopPropagation (DeleteEdge from to)
 
 
 onMouseDownSelectStartingNode : NodeId -> Svg.Attribute Msg

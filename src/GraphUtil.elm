@@ -5,6 +5,7 @@ module GraphUtil
         , setNodeText
         , insertNode
         , insertEdge
+        , removeEdge
         , crashIfNodeNotInGraph
         , getNode
         )
@@ -48,6 +49,18 @@ insertEdge from to graph =
             }
     in
         Graph.update from (Maybe.map (insertOutgoingEdge to)) graph
+
+
+removeEdge : NodeId -> NodeId -> ModelGraph -> ModelGraph
+removeEdge from to gr =
+    let
+        removeOutgoingEdge : NodeId -> NodeContext NodeLabel () -> NodeContext NodeLabel ()
+        removeOutgoingEdge toId oldContext =
+            { oldContext
+                | outgoing = IntDict.remove toId oldContext.outgoing
+            }
+    in
+        Graph.update from (Maybe.map (removeOutgoingEdge to)) gr
 
 
 crashIfNodeNotInGraph : NodeId -> Maybe GraphNode -> GraphNode

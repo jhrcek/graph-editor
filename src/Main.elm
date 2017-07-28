@@ -8,10 +8,21 @@ import Types exposing (..)
 import View
 
 
+initialGraph : ModelGraph
+initialGraph =
+    Graph.fromNodeLabelsAndEdgePairs
+        [ { x = 300, y = 300, nodeText = "one" }
+        , { x = 400, y = 300, nodeText = "two" }
+        , { x = 400, y = 400, nodeText = "three" }
+        , { x = 500, y = 200, nodeText = "four" }
+        ]
+        [ ( 0, 1 ), ( 1, 2 ), ( 1, 3 ) ]
+
+
 init : ( Model, Cmd Msg )
 init =
-    ( { graph = Graph.empty
-      , newNodeId = 0
+    ( { graph = initialGraph
+      , newNodeId = Graph.size initialGraph
       , draggedNode = Nothing
       , editorMode = NodeEditMode Nothing
       }
@@ -89,6 +100,9 @@ update msg model =
 
         DeleteNode nodeId ->
             ( { model | graph = Graph.remove nodeId model.graph }, Cmd.none )
+
+        DeleteEdge fromId toId ->
+            ( { model | graph = GraphUtil.removeEdge fromId toId model.graph }, Cmd.none )
 
         SetMode mode ->
             ( { model | editorMode = mode }, Cmd.none )

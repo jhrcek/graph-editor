@@ -48,6 +48,7 @@ type Msg
     | PreviewEdgeEndpointPositionChanged Mouse.Position
       --
     | DeleteNode NodeId
+    | DeleteEdge NodeId NodeId
       -- Changing modes
     | SetMode EditorMode
     | NoOp

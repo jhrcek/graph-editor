@@ -41,7 +41,7 @@ viewCanvas editorMode graph draggedNode =
             Graph.nodes graph |> List.map (viewNode draggedNode editorMode)
 
         edgesView =
-            Graph.edges graph |> List.map (viewEdge graph draggedNode)
+            Graph.edges graph |> List.map (viewEdge graph draggedNode editorMode)
 
         edgeBeingCreated =
             getEdgeBeingCreated editorMode graph
@@ -54,10 +54,10 @@ getEdgeBeingCreated editorMode graph =
     case editorMode of
         EdgeEditMode (FromSelected nodeId mousePosition) ->
             let
-                { x, y } =
-                    GraphUtil.getNode nodeId graph |> .label
+                fromNode =
+                    GraphUtil.getNode nodeId graph
             in
-                Canvas.drawEdge x y mousePosition.x mousePosition.y
+                Canvas.drawEdge fromNode.label mousePosition.x mousePosition.y []
 
         _ ->
             Svg.text ""
@@ -66,35 +66,35 @@ getEdgeBeingCreated editorMode graph =
 viewNode : Maybe Drag -> EditorMode -> GraphNode -> Svg Msg
 viewNode mDrag editorMode node =
     let
-        labelMaybeAffectedByDrag =
+        nodeMaybeAffectedByDrag =
             applyDrag mDrag node
     in
-        Canvas.boxedText node.id labelMaybeAffectedByDrag editorMode
+        Canvas.boxedText nodeMaybeAffectedByDrag editorMode
 
 
-viewEdge : ModelGraph -> Maybe Drag -> Edge () -> Html Msg
-viewEdge graph mDrag edge =
+viewEdge : ModelGraph -> Maybe Drag -> EditorMode -> Edge () -> Html Msg
+viewEdge graph mDrag editorMode edge =
     let
-        fromNodeLabel =
+        fromNode =
             GraphUtil.getNode edge.from graph |> applyDrag mDrag
 
-        toNodeLabel =
+        toNode =
             GraphUtil.getNode edge.to graph |> applyDrag mDrag
     in
-        Canvas.edgeArrow edge fromNodeLabel toNodeLabel
+        Canvas.edgeArrow edge fromNode toNode editorMode
 
 
-applyDrag : Maybe Drag -> GraphNode -> NodeLabel
+applyDrag : Maybe Drag -> GraphNode -> GraphNode
 applyDrag mDrag node =
     case mDrag of
         Just drag ->
             if drag.nodeId == node.id then
-                Types.getDraggedNodePosition drag node.label
+                { node | label = Types.getDraggedNodePosition drag node.label }
             else
-                node.label
+                node
 
         Nothing ->
-            node.label
+            node
 
 
 viewNodeForm : Model -> Html Msg
