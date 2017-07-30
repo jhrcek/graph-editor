@@ -1,8 +1,8 @@
-module Canvas exposing (boxedText, edgeArrow, drawEdge, arrowHeadMarkerDefs)
+module Canvas exposing (boxedText, edgeArrow, drawEdge, svgDefs)
 
 import Graph exposing (NodeId)
-import Svg exposing (Svg, g, rect, text, text_)
-import Svg.Attributes exposing (alignmentBaseline, d, fill, fontFamily, fontSize, height, id, markerEnd, markerHeight, markerUnits, markerWidth, name, orient, refX, refY, rx, ry, stroke, strokeWidth, style, textAnchor, transform, width, x, x1, x2, y, y1, y2)
+import Svg exposing (Svg, feComponentTransfer, feComposite, feFlood, g, rect, text, text_)
+import Svg.Attributes exposing (alignmentBaseline, d, fill, filter, floodColor, floodOpacity, fontFamily, fontSize, height, id, in2, in_, markerEnd, markerHeight, markerUnits, markerWidth, name, orient, refX, refY, rx, ry, stroke, strokeWidth, style, textAnchor, transform, width, x, x1, x2, y, y1, y2)
 import SvgMouse
 import Types exposing (..)
 
@@ -58,9 +58,7 @@ boxedText { id, label } editorMode =
                     [ onClickDeleteNode id, style "cursor: not-allowed;" ]
     in
         g
-            [ transform tranformValue
-            , name (toString id)
-            ]
+            [ transform tranformValue ]
             [ rect
                 ([ width (toString boxWidth)
                  , height (toString boxHeight)
@@ -73,22 +71,27 @@ boxedText { id, label } editorMode =
                     ++ modeDependentAttributes
                 )
                 []
-            , text_
-                ([ Svg.Attributes.x (toString <| boxCenterX)
-                 , Svg.Attributes.y (toString <| boxCenterY)
-                 , fill "black"
-                 , textAnchor "middle"
-                 , alignmentBaseline "central"
-                 , fontSize "16px"
-                 , fontFamily "sans-serif"
-
-                 --prevent text to be selectable by click+dragging
-                 , style "user-select: none; -moz-user-select: none;"
-                 ]
-                    ++ modeDependentAttributes
-                )
-                [ text label.nodeText ]
+            , positionedText boxCenterX boxCenterY label.nodeText modeDependentAttributes
             ]
+
+
+positionedText : Int -> Int -> String -> List (Svg.Attribute Msg) -> Svg Msg
+positionedText xCoord yCoord txt additionalAttributes =
+    text_
+        ([ Svg.Attributes.x (toString <| xCoord)
+         , Svg.Attributes.y (toString <| yCoord)
+         , fill "black"
+         , textAnchor "middle"
+         , alignmentBaseline "central"
+         , fontSize "16px"
+         , fontFamily "sans-serif"
+
+         --prevent text to be selectable by click+dragging
+         , style "user-select: none; -moz-user-select: none;"
+         ]
+            ++ additionalAttributes
+        )
+        [ text txt ]
 
 
 getBoxWidth : String -> Int
@@ -159,17 +162,34 @@ drawEdge fromLabel xTo yTo attrList =
         g attrList
             [ Svg.line (coordAttrs ++ [ stroke "transparent", strokeWidth "6" ]) []
             , Svg.line (coordAttrs ++ [ stroke "black", strokeWidth "1", markerEnd "url(#arrow)" ]) []
+            , positionedText ((fromLabel.x + xTo) // 2) ((fromLabel.y + yTo) // 2) "test text1" [ filter "url(#myBgColor)", SvgMouse.onClickStopPropagation NoOp ]
             ]
+
+
+svgDefs : Svg a
+svgDefs =
+    Svg.defs []
+        [ arrowHeadMarkerDef
+        , textBackgroundColorDef
+        ]
 
 
 {-| Arrowhead to be reused by all edges, inspired by <http://vanseodesign.com/web-design/svg-markers/>
 -}
-arrowHeadMarkerDefs : Svg a
-arrowHeadMarkerDefs =
-    Svg.defs []
-        [ Svg.marker [ id "arrow", markerWidth "15", markerHeight "6", refX "15", refY "3", orient "auto", markerUnits "strokeWidth" ]
-            [ Svg.path [ d "M0,0 L0,6 L15,3 z", fill "black" ] []
-            ]
+arrowHeadMarkerDef : Svg a
+arrowHeadMarkerDef =
+    Svg.marker [ id "arrow", markerWidth "15", markerHeight "6", refX "15", refY "3", orient "auto", markerUnits "strokeWidth" ]
+        [ Svg.path [ d "M0,0 L0,6 L15,3 z", fill "black" ] []
+        ]
+
+
+{-| Filter definition to set background color of edge text labels, inspired by <https://stackoverflow.com/questions/15500894/background-color-of-text-in-svg#answer-31013492>
+-}
+textBackgroundColorDef : Svg a
+textBackgroundColorDef =
+    Svg.filter [ id "myBgColor", x "0", y "0", width "1", height "1" ]
+        [ feFlood [ floodColor "white", floodOpacity "0.7" ] []
+        , feComposite [ in_ "SourceGraphic", in2 "BackgroundImage" ] []
         ]
 
 

@@ -15,7 +15,7 @@ module Types
         )
 
 import Mouse exposing (Position)
-import Graph exposing (NodeId, Graph)
+import Graph exposing (NodeId, Graph, Edge)
 
 
 type alias Model =
@@ -104,10 +104,7 @@ isEdgeEditMode mode =
 type EdgeEditState
     = NothingSelected
     | FromSelected NodeId Mouse.Position
-
-
-
---| EdgeHover
+    | EdgeLabelEdit (Edge ())
 
 
 getDraggedNodePosition : Drag -> NodeLabel -> NodeLabel

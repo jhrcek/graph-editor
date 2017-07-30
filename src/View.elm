@@ -46,7 +46,7 @@ viewCanvas editorMode graph draggedNode =
         edgeBeingCreated =
             getEdgeBeingCreated editorMode graph
     in
-        Svg.svg svgElemAttributes <| Canvas.arrowHeadMarkerDefs :: edgeBeingCreated :: edgesView ++ nodesView
+        Svg.svg svgElemAttributes <| Canvas.svgDefs :: edgeBeingCreated :: edgesView ++ nodesView
 
 
 getEdgeBeingCreated : EditorMode -> ModelGraph -> Svg Msg
