@@ -2,7 +2,7 @@ module Canvas exposing (boxedText, edgeArrow, drawEdge, svgDefs)
 
 import Graph exposing (NodeId)
 import Svg exposing (Svg, g, rect, text, text_)
-import Svg.Attributes exposing (alignmentBaseline, d, fill, fontFamily, fontSize, height, id, markerEnd, markerHeight, markerUnits, markerWidth, orient, refX, refY, rx, ry, stroke, strokeWidth, style, textAnchor, transform, width, x, x1, x2, y, y1, y2)
+import Svg.Attributes exposing (alignmentBaseline, d, fill, fillOpacity, fontFamily, fontSize, height, id, markerEnd, markerHeight, markerUnits, markerWidth, orient, refX, refY, rx, ry, stroke, strokeWidth, style, textAnchor, transform, width, x, x1, x2, y, y1, y2)
 import SvgMouse
 import Types exposing (..)
 
@@ -100,16 +100,12 @@ positionedText xCoord yCoord elementId textContent additionalAttributes =
 
 getBoxWidth : NodeText -> Int
 getBoxWidth (NodeText mBBox str) =
-    let
-        textWidth =
-            case mBBox of
-                Nothing ->
-                    characterWidthPixels * String.length str
+    case mBBox of
+        Nothing ->
+            characterWidthPixels * String.length str
 
-                Just bbox ->
-                    round bbox.width
-    in
-        textWidth + characterWidthPixels
+        Just bbox ->
+            characterWidthPixels + round bbox.width
 
 
 edgeArrow : GraphEdge -> GraphNode -> GraphNode -> EditorMode -> Svg Msg
@@ -157,7 +153,7 @@ edgeArrow edge fromNode toNode editorMode =
                     [ onClickDeleteEdge fromNode.id toNode.id, style "cursor: not-allowed;" ]
 
                 _ ->
-                    []
+                    [ SvgMouse.onMouseDownStopPropagation NoOp ]
 
         edgeTextId =
             toString fromNode.id ++ ":" ++ toString toNode.id
@@ -166,7 +162,7 @@ edgeArrow edge fromNode toNode editorMode =
 
 
 drawEdge : NodeLabel -> Int -> Int -> String -> EdgeLabel -> List (Svg.Attribute Msg) -> Svg Msg
-drawEdge fromLabel xTo yTo edgeTextId (EdgeLabel edgeText) attrList =
+drawEdge fromLabel xTo yTo edgeTextId (EdgeLabel mBBox edgeText) attrList =
     let
         coordAttrs =
             [ x1 (toString fromLabel.x)
@@ -180,13 +176,32 @@ drawEdge fromLabel xTo yTo edgeTextId (EdgeLabel edgeText) attrList =
 
         edgeCenterY =
             (fromLabel.y + yTo) // 2
+
+        backgroundRect attrs =
+            case mBBox of
+                Nothing ->
+                    Svg.text ""
+
+                Just bbox ->
+                    rect
+                        ([ width (toString bbox.width)
+                         , height (toString bbox.height)
+                         , x (toString bbox.x)
+                         , y (toString bbox.y)
+                         , fill "lightsalmon"
+                         , fillOpacity "0.8"
+                         , stroke "black"
+                         , strokeWidth "1"
+                         ]
+                            ++ attrs
+                        )
+                        []
     in
         g attrList
             [ Svg.line (coordAttrs ++ [ stroke "transparent", strokeWidth "6" ]) []
             , Svg.line (coordAttrs ++ [ stroke "black", strokeWidth "1", markerEnd "url(#arrow)" ]) []
-
-            -- TODO draw bacground rectangle whose size is based on edge label's text bounding box
-            , positionedText edgeCenterX edgeCenterY edgeTextId edgeText [ SvgMouse.onClickStopPropagation NoOp ]
+            , backgroundRect attrList
+            , positionedText edgeCenterX edgeCenterY edgeTextId edgeText attrList
             ]
 
 

@@ -89,7 +89,7 @@ type NodeText
 
 
 type EdgeLabel
-    = EdgeLabel String
+    = EdgeLabel (Maybe BBox) String
 
 
 nodeTextToString : NodeText -> String

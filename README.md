@@ -16,17 +16,12 @@ Simple editor for creating graphs implemented purely in Elm.
 
 
 # TODOs
-- [x] when drawing edges, pass the entire nodes, not just their coordinates
-- [x] Add svg text centered at the middle of the edge to render edge
-- [ ] Introduce new EdgeEditState holding NodeId of its 2 endpoints and edge label being edited
+- [ ] Introduce new EdgeEditState holding Edge being edited
 - [x] Add new invisible line behind visible edge which will receive mouse hover events
-    - [ ] doubleclicking it will open edge edit form in the middle of the edge
-    - [x] clicking it in deletion mode will remove it
+    - [ ] doubleclick on edge bounding box should open edge edit form in the middle of the edge
+- [ ] Remove bootstrap stuff from node edit label, make node edit form more "inliny"
+- [ ] Optimize request for node - edge bounding boxes. We only need to redrab bounding boxes of the stuff from moved node's context.
 
-- Draw semi-transparent rectangle behind each edge text to prevent click event propagation to svg canvas
-- Open edge label edit form
-
-- Remove bootstrap stuff from node edit label, make node edit form more "inliny"
-
-
-ISSUE: when drag & dropping nodes, it's possible to drag node outside of canvas
+# ISSUES
+- When drag & dropping nodes, it's possible to drag node outside of canvas
+- When drag & dropping nodes, the edge bounding boxes are not moved

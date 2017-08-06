@@ -57,7 +57,7 @@ getEdgeBeingCreated editorMode graph =
                 fromNode =
                     GraphUtil.getNode nodeId graph
             in
-                Canvas.drawEdge fromNode.label mousePosition.x mousePosition.y "edgeTextIdNotNeeded" (EdgeLabel "") []
+                Canvas.drawEdge fromNode.label mousePosition.x mousePosition.y "edgeTextIdNotNeeded" (EdgeLabel Nothing "") []
 
         _ ->
             Svg.text ""

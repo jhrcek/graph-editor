@@ -2,6 +2,7 @@ port module Ports
     exposing
         ( setBoundingBox
         , requestNodeTextBoundingBox
+        , requestEdgeTextBoundingBox
         )
 
 import Types exposing (BBox, Msg)
@@ -11,6 +12,11 @@ import Graph exposing (NodeId)
 requestNodeTextBoundingBox : NodeId -> Cmd msg
 requestNodeTextBoundingBox nodeId =
     requestBoundingBox (toString nodeId)
+
+
+requestEdgeTextBoundingBox : NodeId -> NodeId -> Cmd msg
+requestEdgeTextBoundingBox fromId toId =
+    requestBoundingBox (toString fromId ++ ":" ++ toString toId)
 
 
 
