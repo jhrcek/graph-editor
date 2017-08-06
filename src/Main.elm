@@ -62,7 +62,7 @@ update msg model =
                 ( { model | editorMode = NodeEditMode (Just editedNode) }, Cmd.none )
 
         NodeEditConfirm nodeId newNodeText ->
-            ( { model | graph = updateNodeLabel nodeId (UnknownSize newNodeText) model.graph, editorMode = NodeEditMode Nothing }
+            ( { model | graph = updateNodeLabel nodeId (NodeText Nothing newNodeText) model.graph, editorMode = NodeEditMode Nothing }
             , Ports.requestNodeTextBoundingBox nodeId
             )
 
@@ -71,7 +71,7 @@ update msg model =
                 newEditorMode =
                     case model.editorMode of
                         NodeEditMode (Just node) ->
-                            NodeEditMode <| Just <| setNodeText (UnknownSize newNodeText) node
+                            NodeEditMode <| Just <| setNodeText (NodeText Nothing newNodeText) node
 
                         _ ->
                             model.editorMode
@@ -130,11 +130,10 @@ updateBoundingBox bbox graph =
             case String.toInt nodeIdString of
                 Ok nodeId ->
                     let
-                        oldNodeText : String
-                        oldNodeText =
-                            (GraphUtil.getNode nodeId graph |> .label |> .nodeText |> nodeTextToString)
+                        (NodeText _ text) =
+                            GraphUtil.getNode nodeId graph |> .label |> .nodeText
                     in
-                        updateNodeLabel nodeId (Sized bbox oldNodeText) graph
+                        updateNodeLabel nodeId (NodeText (Just bbox) text) graph
 
                 Err er ->
                     Debug.crash <| "Failed to parse node id from " ++ bbox.elementId
@@ -203,7 +202,7 @@ makeNode id x y nodeText =
 
 makeNodeLabel : Int -> Int -> String -> NodeLabel
 makeNodeLabel x y nodeText =
-    { nodeText = UnknownSize nodeText
+    { nodeText = NodeText Nothing nodeText
     , x = x
     , y = y
     }

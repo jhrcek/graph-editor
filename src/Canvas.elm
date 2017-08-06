@@ -99,14 +99,14 @@ positionedText xCoord yCoord elementId textContent additionalAttributes =
 
 
 getBoxWidth : NodeText -> Int
-getBoxWidth nodeText =
+getBoxWidth (NodeText mBBox str) =
     let
         textWidth =
-            case nodeText of
-                UnknownSize str ->
+            case mBBox of
+                Nothing ->
                     characterWidthPixels * String.length str
 
-                Sized bbox str ->
+                Just bbox ->
                     round bbox.width
     in
         textWidth + characterWidthPixels

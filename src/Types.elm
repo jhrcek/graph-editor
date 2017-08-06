@@ -85,8 +85,7 @@ type alias NodeLabel =
 
 
 type NodeText
-    = UnknownSize String
-    | Sized BBox String
+    = NodeText (Maybe BBox) String
 
 
 type EdgeLabel
@@ -94,13 +93,8 @@ type EdgeLabel
 
 
 nodeTextToString : NodeText -> String
-nodeTextToString nodeText =
-    case nodeText of
-        UnknownSize str ->
-            str
-
-        Sized _ str ->
-            str
+nodeTextToString (NodeText _ string) =
+    string
 
 
 

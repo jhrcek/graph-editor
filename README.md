@@ -23,7 +23,9 @@ Simple editor for creating graphs implemented purely in Elm.
     - [ ] doubleclicking it will open edge edit form in the middle of the edge
     - [x] clicking it in deletion mode will remove it
 
+- Draw semi-transparent rectangle behind each edge text to prevent click event propagation to svg canvas
 - Open edge label edit form
+
 - Remove bootstrap stuff from node edit label, make node edit form more "inliny"
 
 
