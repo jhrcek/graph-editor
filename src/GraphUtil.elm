@@ -6,13 +6,12 @@ module GraphUtil
         , insertNode
         , insertEdge
         , removeEdge
-        , crashIfNodeNotInGraph
         , getNode
         )
 
 import Graph exposing (Node, NodeContext, NodeId)
-import Types exposing (GraphNode, ModelGraph, NodeLabel)
 import IntDict
+import Types exposing (GraphNode, ModelGraph, NodeLabel, NodeText(..))
 
 
 updateNodeInContext : (Node n -> Node n) -> NodeContext n e -> NodeContext n e
@@ -25,7 +24,7 @@ updateLabelInNode labelUpdater node =
     { node | label = labelUpdater node.label }
 
 
-setNodeText : String -> GraphNode -> GraphNode
+setNodeText : NodeText -> GraphNode -> GraphNode
 setNodeText newText node =
     updateLabelInNode (\label -> { label | nodeText = newText }) node
 
@@ -63,6 +62,11 @@ removeEdge from to gr =
         Graph.update from (Maybe.map (removeOutgoingEdge to)) gr
 
 
+getNode : NodeId -> ModelGraph -> GraphNode
+getNode nodeId graph =
+    Graph.get nodeId graph |> Maybe.map (.node) |> crashIfNodeNotInGraph nodeId
+
+
 crashIfNodeNotInGraph : NodeId -> Maybe GraphNode -> GraphNode
 crashIfNodeNotInGraph nodeId mGraphNode =
     case mGraphNode of
@@ -71,8 +75,3 @@ crashIfNodeNotInGraph nodeId mGraphNode =
 
         Just node ->
             node
-
-
-getNode : NodeId -> ModelGraph -> GraphNode
-getNode nodeId graph =
-    Graph.get nodeId graph |> Maybe.map (.node) |> crashIfNodeNotInGraph nodeId

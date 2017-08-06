@@ -1,20 +1,21 @@
 module Main exposing (..)
 
 import Graph exposing (Graph, NodeContext, NodeId)
-import GraphUtil exposing (crashIfNodeNotInGraph, setNodeText, updateLabelInNode, updateNodeInContext)
+import GraphUtil exposing (setNodeText, updateLabelInNode, updateNodeInContext)
 import Html exposing (Html)
 import Mouse exposing (Position)
 import Types exposing (..)
+import Ports
 import View
 
 
 initialGraph : ModelGraph
 initialGraph =
     Graph.fromNodeLabelsAndEdgePairs
-        [ { x = 300, y = 300, nodeText = "one" }
-        , { x = 400, y = 300, nodeText = "two" }
-        , { x = 400, y = 400, nodeText = "three" }
-        , { x = 500, y = 200, nodeText = "four" }
+        [ makeNodeLabel 300 300 "a"
+        , makeNodeLabel 400 300 "bb"
+        , makeNodeLabel 400 400 "ccc"
+        , makeNodeLabel 500 200 "dddd"
         ]
         [ ( 0, 1 ), ( 1, 2 ), ( 1, 3 ) ]
 
@@ -26,7 +27,9 @@ init =
       , draggedNode = Nothing
       , editorMode = NodeEditMode Nothing
       }
-    , Cmd.none
+    , Graph.nodeIds initialGraph
+        |> List.map Ports.requestNodeTextBoundingBox
+        |> Cmd.batch
     )
 
 
@@ -48,9 +51,6 @@ update msg model =
         NodeDrag dragMsg ->
             ( processDragMsg dragMsg model, Cmd.none )
 
-        NoOp ->
-            ( model, Cmd.none )
-
         NodeEditStart nodeId ->
             let
                 editedNode =
@@ -58,15 +58,17 @@ update msg model =
             in
                 ( { model | editorMode = NodeEditMode (Just editedNode) }, Cmd.none )
 
-        NodeEditConfirm nodeId newLabel ->
-            ( { model | graph = updateNodeLabel nodeId newLabel model.graph, editorMode = NodeEditMode Nothing }, Cmd.none )
+        NodeEditConfirm nodeId newNodeText ->
+            ( { model | graph = updateNodeLabel nodeId (UnknownSize newNodeText) model.graph, editorMode = NodeEditMode Nothing }
+            , Ports.requestNodeTextBoundingBox nodeId
+            )
 
         NodeLabelEdit nodeId newNodeText ->
             let
                 newEditorMode =
                     case model.editorMode of
                         NodeEditMode (Just node) ->
-                            NodeEditMode <| Just <| setNodeText newNodeText node
+                            NodeEditMode <| Just <| setNodeText (UnknownSize newNodeText) node
 
                         _ ->
                             model.editorMode
@@ -106,6 +108,41 @@ update msg model =
 
         SetMode mode ->
             ( { model | editorMode = mode }, Cmd.none )
+
+        SetBoundingBox bbox ->
+            let
+                _ =
+                    Debug.log "bbox" bbox
+            in
+                -- TODO propagate bounding box info to node/edge label
+                ( { model | graph = updateBoundingBox bbox model.graph }, Cmd.none )
+
+        NoOp ->
+            ( model, Cmd.none )
+
+
+updateBoundingBox : BBox -> ModelGraph -> ModelGraph
+updateBoundingBox bbox graph =
+    case String.split ":" bbox.elementId of
+        nodeIdString :: [] ->
+            case String.toInt nodeIdString of
+                Ok nodeId ->
+                    let
+                        oldNodeText : String
+                        oldNodeText =
+                            (GraphUtil.getNode nodeId graph |> .label |> .nodeText |> nodeTextToString)
+                    in
+                        updateNodeLabel nodeId (Sized bbox oldNodeText) graph
+
+                Err er ->
+                    Debug.crash <| "Failed to parse node id from " ++ bbox.elementId
+
+        edgeFromIdStr :: edgeToIdStr :: [] ->
+            --TODO updating edge label bounding box
+            graph
+
+        _ ->
+            graph
 
 
 setMousePositionIfCreatingEdge : Mouse.Position -> Model -> Model
@@ -150,19 +187,23 @@ updateDraggedNodeInContext drag =
     Maybe.map (updateNodeInContext (updateLabelInNode (Types.getDraggedNodePosition drag)))
 
 
-updateNodeLabel : NodeId -> String -> ModelGraph -> ModelGraph
+updateNodeLabel : NodeId -> NodeText -> ModelGraph -> ModelGraph
 updateNodeLabel nodeId newNodeText graph =
     Graph.update nodeId (Maybe.map (updateNodeInContext (GraphUtil.setNodeText newNodeText))) graph
 
 
-makeNode : Int -> Int -> Int -> String -> GraphNode
+makeNode : NodeId -> Int -> Int -> String -> GraphNode
 makeNode id x y nodeText =
     { id = id
-    , label =
-        { nodeText = nodeText
-        , x = x
-        , y = y
-        }
+    , label = makeNodeLabel x y nodeText
+    }
+
+
+makeNodeLabel : Int -> Int -> String -> NodeLabel
+makeNodeLabel x y nodeText =
+    { nodeText = UnknownSize nodeText
+    , x = x
+    , y = y
     }
 
 
@@ -171,6 +212,7 @@ subscriptions model =
     Sub.batch
         [ nodeDragDropSubscriptions model.draggedNode
         , edgeCreationSubscriptions model.editorMode
+        , Ports.setBoundingBox SetBoundingBox
         ]
 
 

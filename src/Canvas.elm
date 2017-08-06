@@ -56,6 +56,9 @@ boxedText { id, label } editorMode =
 
                 DeletionMode ->
                     [ onClickDeleteNode id, style "cursor: not-allowed;" ]
+
+        nodeTextId =
+            toString id
     in
         g
             [ transform tranformValue ]
@@ -71,12 +74,12 @@ boxedText { id, label } editorMode =
                     ++ modeDependentAttributes
                 )
                 []
-            , positionedText boxCenterX boxCenterY label.nodeText modeDependentAttributes
+            , positionedText boxCenterX boxCenterY nodeTextId (nodeTextToString label.nodeText) modeDependentAttributes
             ]
 
 
-positionedText : Int -> Int -> String -> List (Svg.Attribute Msg) -> Svg Msg
-positionedText xCoord yCoord txt additionalAttributes =
+positionedText : Int -> Int -> String -> String -> List (Svg.Attribute Msg) -> Svg Msg
+positionedText xCoord yCoord elementId textContent additionalAttributes =
     text_
         ([ Svg.Attributes.x (toString <| xCoord)
          , Svg.Attributes.y (toString <| yCoord)
@@ -84,19 +87,25 @@ positionedText xCoord yCoord txt additionalAttributes =
          , textAnchor "middle"
          , alignmentBaseline "central"
          , fontSize "16px"
-         , fontFamily "sans-serif"
+         , fontFamily "sans-serif, monospace"
+         , id elementId
 
          --prevent text to be selectable by click+dragging
          , style "user-select: none; -moz-user-select: none;"
          ]
             ++ additionalAttributes
         )
-        [ text txt ]
+        [ text textContent ]
 
 
-getBoxWidth : String -> Int
+getBoxWidth : NodeText -> Int
 getBoxWidth nodeText =
-    (characterWidthPixels * String.length nodeText) + 20
+    case nodeText of
+        UnknownSize str ->
+            (characterWidthPixels * String.length str) + characterWidthPixels
+
+        Sized bbox str ->
+            round bbox.width + characterWidthPixels
 
 
 edgeArrow : Graph.Edge () -> GraphNode -> GraphNode -> EditorMode -> Svg Msg
@@ -145,12 +154,15 @@ edgeArrow edge fromNode toNode editorMode =
 
                 _ ->
                     []
+
+        edgeTextId =
+            toString fromNode.id ++ ":" ++ toString toNode.id
     in
-        drawEdge fromNode.label arrowHeadX arrowHeadY modeDependentAttributes
+        drawEdge fromNode.label arrowHeadX arrowHeadY edgeTextId modeDependentAttributes
 
 
-drawEdge : NodeLabel -> Int -> Int -> List (Svg.Attribute Msg) -> Svg Msg
-drawEdge fromLabel xTo yTo attrList =
+drawEdge : NodeLabel -> Int -> Int -> String -> List (Svg.Attribute Msg) -> Svg Msg
+drawEdge fromLabel xTo yTo edgeTextId attrList =
     let
         coordAttrs =
             [ x1 (toString fromLabel.x)
@@ -158,15 +170,21 @@ drawEdge fromLabel xTo yTo attrList =
             , x2 (toString xTo)
             , y2 (toString yTo)
             ]
+
+        edgeCenterX =
+            (fromLabel.x + xTo) // 2
+
+        edgeCenterY =
+            (fromLabel.y + yTo) // 2
     in
         g attrList
             [ Svg.line (coordAttrs ++ [ stroke "transparent", strokeWidth "6" ]) []
             , Svg.line (coordAttrs ++ [ stroke "black", strokeWidth "1", markerEnd "url(#arrow)" ]) []
-            , positionedText ((fromLabel.x + xTo) // 2) ((fromLabel.y + yTo) // 2) "test text1" [ filter "url(#myBgColor)", SvgMouse.onClickStopPropagation NoOp ]
+            , positionedText edgeCenterX edgeCenterY edgeTextId "test text1" [ filter "url(#myBgColor)", SvgMouse.onClickStopPropagation NoOp ]
             ]
 
 
-svgDefs : Svg a
+svgDefs : Svg Msg
 svgDefs =
     Svg.defs []
         [ arrowHeadMarkerDef
@@ -185,10 +203,10 @@ arrowHeadMarkerDef =
 
 {-| Filter definition to set background color of edge text labels, inspired by <https://stackoverflow.com/questions/15500894/background-color-of-text-in-svg#answer-31013492>
 -}
-textBackgroundColorDef : Svg a
+textBackgroundColorDef : Svg Msg
 textBackgroundColorDef =
-    Svg.filter [ id "myBgColor", x "0", y "0", width "1", height "1" ]
-        [ feFlood [ floodColor "white", floodOpacity "0.7" ] []
+    Svg.filter [ id "myBgColor", x "0", y "0", width "1", height "1", SvgMouse.onClickStopPropagation NoOp ]
+        [ feFlood [ floodColor "pink", floodOpacity "0.7" ] []
         , feComposite [ in_ "SourceGraphic", in2 "BackgroundImage" ] []
         ]
 
@@ -223,24 +241,19 @@ onMouseUpCreateEdge nodeId =
     SvgMouse.onMouseUp (EndNodeOfEdgeSelected nodeId)
 
 
-
--- TODO I'm using monospace font, but I don't like this assumption
--- Is there an "elmy" way to query the width of rendered text?
-
-
 characterWidthPixels : Int
 characterWidthPixels =
-    7
+    9
 
 
 characterHeightPixels : Int
 characterHeightPixels =
-    14
+    15
 
 
 boxHeight : Int
 boxHeight =
-    characterHeightPixels * 2
+    characterHeightPixels + 10
 
 
 {-| Determine which side of the box we should draw arrowhead of incomming edge

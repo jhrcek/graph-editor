@@ -6,12 +6,15 @@ module Types
         , Msg(..)
         , DragMsg(..)
         , NodeLabel
+        , NodeText(..)
+        , nodeTextToString
         , Drag
         , EditorMode(..)
         , isNodeEditMode
         , isEdgeEditMode
         , EdgeEditState(..)
         , getDraggedNodePosition
+        , BBox
         )
 
 import Mouse exposing (Position)
@@ -51,6 +54,7 @@ type Msg
     | DeleteEdge NodeId NodeId
       -- Changing modes
     | SetMode EditorMode
+    | SetBoundingBox BBox
     | NoOp
 
 
@@ -68,10 +72,29 @@ type alias Drag =
 
 
 type alias NodeLabel =
-    { nodeText : String
+    { nodeText : NodeText
     , x : Int
     , y : Int
     }
+
+
+type NodeText
+    = UnknownSize String
+    | Sized BBox String
+
+
+nodeTextToString : NodeText -> String
+nodeTextToString nodeText =
+    case nodeText of
+        UnknownSize str ->
+            str
+
+        Sized _ str ->
+            str
+
+
+
+-- | Sized BBox String
 
 
 type EditorMode
@@ -104,7 +127,6 @@ isEdgeEditMode mode =
 type EdgeEditState
     = NothingSelected
     | FromSelected NodeId Mouse.Position
-    | EdgeLabelEdit (Edge ())
 
 
 getDraggedNodePosition : Drag -> NodeLabel -> NodeLabel
@@ -112,4 +134,13 @@ getDraggedNodePosition { nodeId, start, current } nodeLabel =
     { nodeLabel
         | x = nodeLabel.x + current.x - start.x
         , y = nodeLabel.y + current.y - start.y
+    }
+
+
+type alias BBox =
+    { x : Float
+    , y : Float
+    , width : Float
+    , height : Float
+    , elementId : String
     }

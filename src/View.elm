@@ -2,7 +2,7 @@ module View exposing (view)
 
 import Canvas
 import Graph exposing (Edge, NodeId)
-import GraphUtil exposing (crashIfNodeNotInGraph)
+import GraphUtil
 import Html exposing (Html, button, div, form, h3, input, label, li, span, text, ul)
 import Html.Attributes as Attr exposing (autofocus, class, classList, id, name, placeholder, readonly, style, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
@@ -57,7 +57,7 @@ getEdgeBeingCreated editorMode graph =
                 fromNode =
                     GraphUtil.getNode nodeId graph
             in
-                Canvas.drawEdge fromNode.label mousePosition.x mousePosition.y []
+                Canvas.drawEdge fromNode.label mousePosition.x mousePosition.y "edgeTextIdNotNeeded" []
 
         _ ->
             Svg.text ""
@@ -101,7 +101,7 @@ viewNodeForm : Model -> Html Msg
 viewNodeForm { editorMode, graph } =
     case editorMode of
         NodeEditMode (Just node) ->
-            nodeForm node.id node.label.nodeText node.label.x node.label.y
+            nodeForm node.id (nodeTextToString node.label.nodeText) node.label.x node.label.y
 
         _ ->
             Html.text ""

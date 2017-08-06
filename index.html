@@ -12,6 +12,18 @@
   <script src="app.js"></script>
   <script>
     var app = Elm.Main.fullscreen();
+
+    /* Port for determining Bounding Box of SVG element with given ID
+     * BBox is used to determine exact size of rectangle drawn around the text
+     */
+    app.ports.requestBoundingBox.subscribe(function(idOfSvgText) {
+      requestAnimationFrame(function() {
+        var text = document.getElementById(idOfSvgText);
+        var bbox = text.getBBox();
+        bbox.elementId = idOfSvgText;
+        app.ports.setBoundingBox.send(bbox);
+      })
+    });
   </script>
 </body>
 
