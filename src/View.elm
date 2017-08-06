@@ -57,7 +57,7 @@ getEdgeBeingCreated editorMode graph =
                 fromNode =
                     GraphUtil.getNode nodeId graph
             in
-                Canvas.drawEdge fromNode.label mousePosition.x mousePosition.y "edgeTextIdNotNeeded" []
+                Canvas.drawEdge fromNode.label mousePosition.x mousePosition.y "edgeTextIdNotNeeded" (EdgeLabel "") []
 
         _ ->
             Svg.text ""
@@ -72,7 +72,7 @@ viewNode mDrag editorMode node =
         Canvas.boxedText nodeMaybeAffectedByDrag editorMode
 
 
-viewEdge : ModelGraph -> Maybe Drag -> EditorMode -> Edge () -> Html Msg
+viewEdge : ModelGraph -> Maybe Drag -> EditorMode -> GraphEdge -> Html Msg
 viewEdge graph mDrag editorMode edge =
     let
         fromNode =

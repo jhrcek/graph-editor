@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import Graph exposing (Graph, NodeContext, NodeId)
+import Graph exposing (Graph, NodeContext, NodeId, Edge)
 import GraphUtil exposing (setNodeText, updateLabelInNode, updateNodeInContext)
 import Html exposing (Html)
 import Mouse exposing (Position)
@@ -11,13 +11,16 @@ import View
 
 initialGraph : ModelGraph
 initialGraph =
-    Graph.fromNodeLabelsAndEdgePairs
-        [ makeNodeLabel 300 300 "a"
-        , makeNodeLabel 400 300 "bb"
-        , makeNodeLabel 400 400 "ccc"
-        , makeNodeLabel 500 200 "dddd"
+    Graph.fromNodesAndEdges
+        [ makeNode 0 300 300 "a"
+        , makeNode 1 400 300 "bb"
+        , makeNode 2 400 400 "ccc"
+        , makeNode 3 500 200 "dddd"
         ]
-        [ ( 0, 1 ), ( 1, 2 ), ( 1, 3 ) ]
+        [ makeEdge 0 1 "edge 1"
+        , makeEdge 1 2 "edge 2"
+        , makeEdge 1 3 "edge 3"
+        ]
 
 
 init : ( Model, Cmd Msg )
@@ -204,6 +207,11 @@ makeNodeLabel x y nodeText =
     , x = x
     , y = y
     }
+
+
+makeEdge : NodeId -> NodeId -> String -> GraphEdge
+makeEdge from to lbl =
+    Edge from to (EdgeLabel lbl)
 
 
 subscriptions : Model -> Sub Msg

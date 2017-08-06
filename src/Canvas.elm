@@ -22,16 +22,16 @@ boxedText { id, label } editorMode =
         boxCenterY =
             boxHeight // 2
 
-        nodeFill =
+        fillColor =
             case editorMode of
                 EdgeEditMode (FromSelected selectedNodeId _) ->
                     if id == selectedNodeId then
-                        fill "lightgray"
+                        "lightgray"
                     else
-                        fill "white"
+                        "white"
 
                 _ ->
-                    fill "white"
+                    "white"
 
         modeDependentAttributes =
             case editorMode of
@@ -69,7 +69,7 @@ boxedText { id, label } editorMode =
                  , ry "4"
                  , stroke "black"
                  , strokeWidth "1"
-                 , nodeFill
+                 , fill fillColor
                  ]
                     ++ modeDependentAttributes
                 )
@@ -100,15 +100,19 @@ positionedText xCoord yCoord elementId textContent additionalAttributes =
 
 getBoxWidth : NodeText -> Int
 getBoxWidth nodeText =
-    case nodeText of
-        UnknownSize str ->
-            (characterWidthPixels * String.length str) + characterWidthPixels
+    let
+        textWidth =
+            case nodeText of
+                UnknownSize str ->
+                    characterWidthPixels * String.length str
 
-        Sized bbox str ->
-            round bbox.width + characterWidthPixels
+                Sized bbox str ->
+                    round bbox.width
+    in
+        textWidth + characterWidthPixels
 
 
-edgeArrow : Graph.Edge () -> GraphNode -> GraphNode -> EditorMode -> Svg Msg
+edgeArrow : GraphEdge -> GraphNode -> GraphNode -> EditorMode -> Svg Msg
 edgeArrow edge fromNode toNode editorMode =
     let
         { x, y, nodeText } =
@@ -158,11 +162,11 @@ edgeArrow edge fromNode toNode editorMode =
         edgeTextId =
             toString fromNode.id ++ ":" ++ toString toNode.id
     in
-        drawEdge fromNode.label arrowHeadX arrowHeadY edgeTextId modeDependentAttributes
+        drawEdge fromNode.label arrowHeadX arrowHeadY edgeTextId edge.label modeDependentAttributes
 
 
-drawEdge : NodeLabel -> Int -> Int -> String -> List (Svg.Attribute Msg) -> Svg Msg
-drawEdge fromLabel xTo yTo edgeTextId attrList =
+drawEdge : NodeLabel -> Int -> Int -> String -> EdgeLabel -> List (Svg.Attribute Msg) -> Svg Msg
+drawEdge fromLabel xTo yTo edgeTextId (EdgeLabel edgeText) attrList =
     let
         coordAttrs =
             [ x1 (toString fromLabel.x)
@@ -182,7 +186,7 @@ drawEdge fromLabel xTo yTo edgeTextId attrList =
             , Svg.line (coordAttrs ++ [ stroke "black", strokeWidth "1", markerEnd "url(#arrow)" ]) []
 
             -- TODO draw bacground rectangle whose size is based on edge label's text bounding box
-            , positionedText edgeCenterX edgeCenterY edgeTextId "test text1" [ SvgMouse.onClickStopPropagation NoOp ]
+            , positionedText edgeCenterX edgeCenterY edgeTextId edgeText [ SvgMouse.onClickStopPropagation NoOp ]
             ]
 
 

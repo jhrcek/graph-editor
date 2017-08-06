@@ -23,4 +23,8 @@ Simple editor for creating graphs implemented purely in Elm.
     - [ ] doubleclicking it will open edge edit form in the middle of the edge
     - [x] clicking it in deletion mode will remove it
 
-Figure out how to prevent click propagation through edge label's filter (not to create nodes when edge label is clicked)
+- Open edge label edit form
+- Remove bootstrap stuff from node edit label, make node edit form more "inliny"
+
+
+ISSUE: when drag & dropping nodes, it's possible to drag node outside of canvas

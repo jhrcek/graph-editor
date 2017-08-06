@@ -11,7 +11,7 @@ module GraphUtil
 
 import Graph exposing (Node, NodeContext, NodeId)
 import IntDict
-import Types exposing (GraphNode, ModelGraph, NodeLabel, NodeText(..))
+import Types exposing (GraphNode, ModelGraph, NodeLabel, NodeText(..), EdgeLabel(..))
 
 
 updateNodeInContext : (Node n -> Node n) -> NodeContext n e -> NodeContext n e
@@ -41,10 +41,10 @@ insertNode node =
 insertEdge : NodeId -> NodeId -> ModelGraph -> ModelGraph
 insertEdge from to graph =
     let
-        insertOutgoingEdge : NodeId -> NodeContext NodeLabel () -> NodeContext NodeLabel ()
+        insertOutgoingEdge : NodeId -> NodeContext NodeLabel EdgeLabel -> NodeContext NodeLabel EdgeLabel
         insertOutgoingEdge toId oldContext =
             { oldContext
-                | outgoing = IntDict.insert toId () oldContext.outgoing
+                | outgoing = IntDict.insert toId (EdgeLabel "dummy") oldContext.outgoing
             }
     in
         Graph.update from (Maybe.map (insertOutgoingEdge to)) graph
@@ -53,7 +53,7 @@ insertEdge from to graph =
 removeEdge : NodeId -> NodeId -> ModelGraph -> ModelGraph
 removeEdge from to gr =
     let
-        removeOutgoingEdge : NodeId -> NodeContext NodeLabel () -> NodeContext NodeLabel ()
+        removeOutgoingEdge : NodeId -> NodeContext NodeLabel EdgeLabel -> NodeContext NodeLabel EdgeLabel
         removeOutgoingEdge toId oldContext =
             { oldContext
                 | outgoing = IntDict.remove toId oldContext.outgoing

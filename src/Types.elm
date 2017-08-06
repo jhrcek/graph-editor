@@ -3,10 +3,12 @@ module Types
         ( Model
         , ModelGraph
         , GraphNode
+        , GraphEdge
         , Msg(..)
         , DragMsg(..)
         , NodeLabel
         , NodeText(..)
+        , EdgeLabel(..)
         , nodeTextToString
         , Drag
         , EditorMode(..)
@@ -30,11 +32,15 @@ type alias Model =
 
 
 type alias ModelGraph =
-    Graph NodeLabel ()
+    Graph NodeLabel EdgeLabel
 
 
 type alias GraphNode =
     Graph.Node NodeLabel
+
+
+type alias GraphEdge =
+    Graph.Edge EdgeLabel
 
 
 type Msg
@@ -81,6 +87,10 @@ type alias NodeLabel =
 type NodeText
     = UnknownSize String
     | Sized BBox String
+
+
+type EdgeLabel
+    = EdgeLabel String
 
 
 nodeTextToString : NodeText -> String
