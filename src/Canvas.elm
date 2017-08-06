@@ -1,8 +1,8 @@
 module Canvas exposing (boxedText, edgeArrow, drawEdge, svgDefs)
 
 import Graph exposing (NodeId)
-import Svg exposing (Svg, feComponentTransfer, feComposite, feFlood, g, rect, text, text_)
-import Svg.Attributes exposing (alignmentBaseline, d, fill, filter, floodColor, floodOpacity, fontFamily, fontSize, height, id, in2, in_, markerEnd, markerHeight, markerUnits, markerWidth, name, orient, refX, refY, rx, ry, stroke, strokeWidth, style, textAnchor, transform, width, x, x1, x2, y, y1, y2)
+import Svg exposing (Svg, g, rect, text, text_)
+import Svg.Attributes exposing (alignmentBaseline, d, fill, fontFamily, fontSize, height, id, markerEnd, markerHeight, markerUnits, markerWidth, orient, refX, refY, rx, ry, stroke, strokeWidth, style, textAnchor, transform, width, x, x1, x2, y, y1, y2)
 import SvgMouse
 import Types exposing (..)
 
@@ -180,16 +180,15 @@ drawEdge fromLabel xTo yTo edgeTextId attrList =
         g attrList
             [ Svg.line (coordAttrs ++ [ stroke "transparent", strokeWidth "6" ]) []
             , Svg.line (coordAttrs ++ [ stroke "black", strokeWidth "1", markerEnd "url(#arrow)" ]) []
-            , positionedText edgeCenterX edgeCenterY edgeTextId "test text1" [ filter "url(#myBgColor)", SvgMouse.onClickStopPropagation NoOp ]
+
+            -- TODO draw bacground rectangle whose size is based on edge label's text bounding box
+            , positionedText edgeCenterX edgeCenterY edgeTextId "test text1" [ SvgMouse.onClickStopPropagation NoOp ]
             ]
 
 
 svgDefs : Svg Msg
 svgDefs =
-    Svg.defs []
-        [ arrowHeadMarkerDef
-        , textBackgroundColorDef
-        ]
+    Svg.defs [] [ arrowHeadMarkerDef ]
 
 
 {-| Arrowhead to be reused by all edges, inspired by <http://vanseodesign.com/web-design/svg-markers/>
@@ -198,16 +197,6 @@ arrowHeadMarkerDef : Svg a
 arrowHeadMarkerDef =
     Svg.marker [ id "arrow", markerWidth "15", markerHeight "6", refX "15", refY "3", orient "auto", markerUnits "strokeWidth" ]
         [ Svg.path [ d "M0,0 L0,6 L15,3 z", fill "black" ] []
-        ]
-
-
-{-| Filter definition to set background color of edge text labels, inspired by <https://stackoverflow.com/questions/15500894/background-color-of-text-in-svg#answer-31013492>
--}
-textBackgroundColorDef : Svg Msg
-textBackgroundColorDef =
-    Svg.filter [ id "myBgColor", x "0", y "0", width "1", height "1", SvgMouse.onClickStopPropagation NoOp ]
-        [ feFlood [ floodColor "pink", floodOpacity "0.7" ] []
-        , feComposite [ in_ "SourceGraphic", in2 "BackgroundImage" ] []
         ]
 
 

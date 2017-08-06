@@ -114,7 +114,6 @@ update msg model =
                 _ =
                     Debug.log "bbox" bbox
             in
-                -- TODO propagate bounding box info to node/edge label
                 ( { model | graph = updateBoundingBox bbox model.graph }, Cmd.none )
 
         NoOp ->
