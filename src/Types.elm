@@ -10,6 +10,7 @@ module Types
         , NodeText(..)
         , EdgeLabel(..)
         , nodeTextToString
+        , setEdgeText
         , Drag
         , EditorMode(..)
         , isNodeEditMode
@@ -46,19 +47,23 @@ type alias GraphEdge =
 type Msg
     = CreateNode Position
     | NodeDrag DragMsg
-      -- Node creation
-    | NodeEditStart NodeId
-    | NodeEditConfirm NodeId String
-    | NodeLabelEdit NodeId String
-      -- Edge creation
+      -- Editing Node label
+    | NodeLabelEditStart GraphNode
+    | NodeEditConfirm
+    | NodeLabelEdit String
+      -- Editing Edge label
+    | EdgeLabelEditStart GraphEdge
+    | EdgeLabelEdit String
+    | EdgeLabelConfirm
+      -- Creating Edges
     | StartNodeOfEdgeSelected NodeId
     | EndNodeOfEdgeSelected NodeId
     | UnselectStartNodeOfEdge
     | PreviewEdgeEndpointPositionChanged Mouse.Position
-      --
+      -- Deleting Nodes and Edges
     | DeleteNode NodeId
     | DeleteEdge NodeId NodeId
-      -- Changing modes
+      -- Switching between modes
     | SetMode EditorMode
     | SetBoundingBox BBox
     | NoOp
@@ -88,13 +93,18 @@ type NodeText
     = NodeText (Maybe BBox) String
 
 
+nodeTextToString : NodeText -> String
+nodeTextToString (NodeText _ string) =
+    string
+
+
 type EdgeLabel
     = EdgeLabel (Maybe BBox) String
 
 
-nodeTextToString : NodeText -> String
-nodeTextToString (NodeText _ string) =
-    string
+setEdgeText : String -> EdgeLabel -> EdgeLabel
+setEdgeText newText (EdgeLabel mbbox _) =
+    EdgeLabel mbbox newText
 
 
 
@@ -131,6 +141,7 @@ isEdgeEditMode mode =
 type EdgeEditState
     = NothingSelected
     | FromSelected NodeId Mouse.Position
+    | EditingEdgeLabel GraphEdge
 
 
 getDraggedNodePosition : Drag -> NodeLabel -> NodeLabel

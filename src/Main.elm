@@ -73,31 +73,34 @@ update msg model =
             let
                 newNode =
                     makeNode model.newNodeId x y ""
-
-                newGraph =
-                    GraphUtil.insertNode newNode model.graph
             in
-                { model | graph = newGraph, newNodeId = model.newNodeId + 1 }
+                { model
+                    | graph = GraphUtil.insertNode newNode model.graph
+                    , newNodeId = model.newNodeId + 1
+                }
                     ! [ Ports.requestNodeTextBoundingBox model.newNodeId ]
 
         NodeDrag dragMsg ->
             processDragMsg dragMsg model
 
-        NodeEditStart nodeId ->
+        NodeLabelEditStart node ->
+            { model | editorMode = NodeEditMode (Just node) } ! []
+
+        NodeEditConfirm ->
             let
-                editedNode =
-                    GraphUtil.getNode nodeId model.graph
+                ( newGraph, command ) =
+                    case model.editorMode of
+                        NodeEditMode (Just node) ->
+                            ( GraphUtil.updateNodeLabel node.id (NodeText Nothing (nodeTextToString node.label.nodeText)) model.graph
+                            , Ports.requestNodeTextBoundingBox node.id
+                            )
+
+                        _ ->
+                            ( model.graph, Cmd.none )
             in
-                { model | editorMode = NodeEditMode (Just editedNode) } ! []
+                { model | graph = newGraph, editorMode = NodeEditMode Nothing } ! [ command ]
 
-        NodeEditConfirm nodeId newNodeText ->
-            { model
-                | graph = GraphUtil.updateNodeLabel nodeId (NodeText Nothing newNodeText) model.graph
-                , editorMode = NodeEditMode Nothing
-            }
-                ! [ Ports.requestNodeTextBoundingBox nodeId ]
-
-        NodeLabelEdit nodeId newNodeText ->
+        NodeLabelEdit newNodeText ->
             let
                 newEditorMode =
                     case model.editorMode of
@@ -121,9 +124,36 @@ update msg model =
                 ( newGraph, command ) =
                     case model.editorMode of
                         EdgeEditMode (FromSelected startNodeId _) ->
-                            ( GraphUtil.insertEdge { from = startNodeId, to = endNodeId, label = EdgeLabel Nothing "" } model.graph
+                            ( GraphUtil.insertEdge { from = startNodeId, to = endNodeId, label = EdgeLabel Nothing "\t" } model.graph
                             , Ports.requestEdgeTextBoundingBox startNodeId endNodeId
                             )
+
+                        _ ->
+                            ( model.graph, Cmd.none )
+            in
+                { model | graph = newGraph, editorMode = EdgeEditMode NothingSelected } ! [ command ]
+
+        EdgeLabelEditStart edge ->
+            { model | editorMode = EdgeEditMode (EditingEdgeLabel edge) } ! []
+
+        EdgeLabelEdit newText ->
+            let
+                newEditorMode =
+                    case model.editorMode of
+                        EdgeEditMode (EditingEdgeLabel edge) ->
+                            EdgeEditMode (EditingEdgeLabel { edge | label = setEdgeText newText edge.label })
+
+                        _ ->
+                            model.editorMode
+            in
+                { model | editorMode = newEditorMode } ! []
+
+        EdgeLabelConfirm ->
+            let
+                ( newGraph, command ) =
+                    case model.editorMode of
+                        EdgeEditMode (EditingEdgeLabel edge) ->
+                            ( GraphUtil.insertEdge edge model.graph, Ports.requestEdgeTextBoundingBox edge.from edge.to )
 
                         _ ->
                             ( model.graph, Cmd.none )

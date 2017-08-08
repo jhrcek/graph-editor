@@ -8,7 +8,7 @@ import Types exposing (..)
 
 
 boxedText : GraphNode -> EditorMode -> Svg Msg
-boxedText { id, label } editorMode =
+boxedText ({ id, label } as node) editorMode =
     let
         tranformValue =
             "translate(" ++ toString (label.x - boxCenterX) ++ "," ++ toString (label.y - boxCenterY) ++ ")"
@@ -40,7 +40,7 @@ boxedText { id, label } editorMode =
 
                 NodeEditMode _ ->
                     [ onClickStartDrag id
-                    , onDoubleClickStartEdit id
+                    , onDoubleClickStartNodeLabelEdit node
                     ]
 
                 EdgeEditMode edgeEditState ->
@@ -53,6 +53,9 @@ boxedText { id, label } editorMode =
                                 [ onMouseUpCreateEdge id ]
                             else
                                 [ SvgMouse.onMouseUpUnselectStartNode ]
+
+                        EditingEdgeLabel _ ->
+                            []
 
                 DeletionMode ->
                     [ onClickDeleteNode id, style "cursor: not-allowed;" ]
@@ -152,17 +155,20 @@ edgeArrow edge fromNode toNode editorMode =
                 DeletionMode ->
                     [ onClickDeleteEdge fromNode.id toNode.id, style "cursor: not-allowed;" ]
 
+                EdgeEditMode _ ->
+                    [ onDoubleClickStartEdgeLabelEdit edge, SvgMouse.onMouseDownStopPropagation NoOp ]
+
                 _ ->
                     [ SvgMouse.onMouseDownStopPropagation NoOp ]
 
         edgeTextId =
             toString fromNode.id ++ ":" ++ toString toNode.id
     in
-        drawEdge fromNode.label arrowHeadX arrowHeadY edgeTextId edge.label modeDependentAttributes
+        drawEdge fromNode.label arrowHeadX arrowHeadY edgeTextId edge modeDependentAttributes
 
 
-drawEdge : NodeLabel -> Int -> Int -> String -> EdgeLabel -> List (Svg.Attribute Msg) -> Svg Msg
-drawEdge fromLabel xTo yTo edgeTextId (EdgeLabel mBBox edgeText) attrList =
+drawEdge : NodeLabel -> Int -> Int -> String -> GraphEdge -> List (Svg.Attribute Msg) -> Svg Msg
+drawEdge fromLabel xTo yTo edgeTextId edge attrList =
     let
         coordAttrs =
             [ x1 (toString fromLabel.x)
@@ -176,6 +182,9 @@ drawEdge fromLabel xTo yTo edgeTextId (EdgeLabel mBBox edgeText) attrList =
 
         edgeCenterY =
             (fromLabel.y + yTo) // 2
+
+        (EdgeLabel mBBox edgeText) =
+            edge.label
 
         backgroundRect attrs =
             case mBBox of
@@ -219,9 +228,14 @@ arrowHeadMarkerDef =
         ]
 
 
-onDoubleClickStartEdit : NodeId -> Svg.Attribute Msg
-onDoubleClickStartEdit nodeId =
-    SvgMouse.onDoubleClickStopPropagation (NodeEditStart nodeId)
+onDoubleClickStartNodeLabelEdit : GraphNode -> Svg.Attribute Msg
+onDoubleClickStartNodeLabelEdit node =
+    SvgMouse.onDoubleClickStopPropagation (NodeLabelEditStart node)
+
+
+onDoubleClickStartEdgeLabelEdit : GraphEdge -> Svg.Attribute Msg
+onDoubleClickStartEdgeLabelEdit edge =
+    SvgMouse.onDoubleClickStopPropagation (EdgeLabelEditStart edge)
 
 
 onClickStartDrag : NodeId -> Svg.Attribute Msg

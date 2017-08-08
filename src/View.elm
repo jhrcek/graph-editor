@@ -4,7 +4,7 @@ import Canvas
 import Graph exposing (Edge, NodeId)
 import GraphUtil
 import Html exposing (Html, button, div, form, h3, input, label, li, span, text, ul)
-import Html.Attributes as Attr exposing (autofocus, class, classList, id, name, placeholder, readonly, style, type_, value)
+import Html.Attributes as Attr exposing (class, classList, id, name, placeholder, readonly, style, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Svg exposing (Svg)
 import SvgMouse
@@ -16,7 +16,8 @@ view ({ graph, draggedNode, editorMode } as model) =
     Html.div []
         [ viewCanvas editorMode graph draggedNode
         , controlsPanel model.editorMode
-        , viewNodeForm model
+        , viewNodeForm model.editorMode
+        , viewEdgeForm model.editorMode
         ]
 
 
@@ -57,10 +58,15 @@ getEdgeBeingCreated editorMode graph =
                 fromNode =
                     GraphUtil.getNode nodeId graph
             in
-                Canvas.drawEdge fromNode.label mousePosition.x mousePosition.y "edgeTextIdNotNeeded" (EdgeLabel Nothing "") []
+                Canvas.drawEdge fromNode.label mousePosition.x mousePosition.y "edgeTextIdNotNeeded" dummyEdge []
 
         _ ->
             Svg.text ""
+
+
+dummyEdge : GraphEdge
+dummyEdge =
+    { from = 0, to = 0, label = EdgeLabel Nothing "" }
 
 
 viewNode : Maybe Drag -> EditorMode -> GraphNode -> Svg Msg
@@ -97,27 +103,64 @@ applyDrag mDrag node =
             node
 
 
-viewNodeForm : Model -> Html Msg
-viewNodeForm { editorMode, graph } =
+viewNodeForm : EditorMode -> Html Msg
+viewNodeForm editorMode =
     case editorMode of
         NodeEditMode (Just node) ->
-            nodeForm node.id (nodeTextToString node.label.nodeText) node.label.x node.label.y
+            nodeForm node
 
         _ ->
             Html.text ""
 
 
+viewEdgeForm : EditorMode -> Html Msg
+viewEdgeForm editorMode =
+    case editorMode of
+        EdgeEditMode (EditingEdgeLabel edge) ->
+            edgeForm edge
 
--- This has size 246 x 38 TODO de-hard code the values
+        _ ->
+            Html.text ""
 
 
-nodeForm : NodeId -> String -> Int -> Int -> Html Msg
-nodeForm nodeId nodeText x y =
-    div [ class "card", style [ ( "width", "18rem" ), ( "position", "absolute" ), ( "left", toString (x - 246 // 2) ++ "px" ), ( "top", toString (y - 38 // 2) ++ "px" ) ] ]
-        [ form [ class "card-block input-group", onSubmit (NodeEditConfirm nodeId nodeText) ]
-            [ input [ class "form-control", placeholder "Node text", type_ "text", autofocus True, value nodeText, onInput (NodeLabelEdit nodeId) ] []
+nodeForm : GraphNode -> Html Msg
+nodeForm { id, label } =
+    let
+        currentText =
+            (nodeTextToString label.nodeText)
+    in
+        labelForm NodeLabelEdit NodeEditConfirm "Node text" currentText label.x label.y
+
+
+edgeForm : GraphEdge -> Html Msg
+edgeForm ({ from, to, label } as edge) =
+    let
+        (EdgeLabel bbox currentText) =
+            edge.label
+
+        ( x, y ) =
+            case bbox of
+                -- TODO what to do if edge text bounding box not set?
+                Nothing ->
+                    ( 300, 300 )
+
+                Just { x, y } ->
+                    ( round x, round y )
+    in
+        labelForm EdgeLabelEdit EdgeLabelConfirm "Edge text" currentText x y
+
+
+labelForm : (String -> Msg) -> Msg -> String -> String -> Int -> Int -> Html Msg
+labelForm editMsg confirmMsg placeholderVal currentValue x y =
+    form
+        [ onSubmit confirmMsg
+        , style
+            [ ( "position", "absolute" )
+            , ( "left", toString (x - 95) ++ "px" )
+            , ( "top", toString (y - 13) ++ "px" )
             ]
         ]
+        [ input [ type_ "text", placeholder placeholderVal, value currentValue, onInput editMsg ] [] ]
 
 
 controlsPanel : EditorMode -> Html Msg
