@@ -88,7 +88,7 @@ update msg model =
                     case model.editorMode of
                         NodeEditMode (Just node) ->
                             ( GraphUtil.updateNodeLabel node.id (NodeText Nothing (nodeTextToString node.label.nodeText)) model.graph
-                            , Ports.requestNodeTextBoundingBox node.id
+                            , Graph.get node.id model.graph |> Ports.requestBoundingBoxesForContext
                             )
 
                         _ ->

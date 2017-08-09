@@ -15,9 +15,9 @@ view : Model -> Html Msg
 view ({ graph, draggedNode, editorMode } as model) =
     Html.div []
         [ viewCanvas editorMode graph draggedNode
-        , controlsPanel model.editorMode
-        , viewNodeForm model.editorMode
-        , viewEdgeForm model.editorMode
+        , controlsPanel editorMode
+        , viewNodeForm editorMode
+        , viewEdgeForm editorMode graph
         ]
 
 
@@ -113,11 +113,11 @@ viewNodeForm editorMode =
             Html.text ""
 
 
-viewEdgeForm : EditorMode -> Html Msg
-viewEdgeForm editorMode =
+viewEdgeForm : EditorMode -> ModelGraph -> Html Msg
+viewEdgeForm editorMode graph =
     case editorMode of
         EdgeEditMode (EditingEdgeLabel edge) ->
-            edgeForm edge
+            edgeForm edge graph
 
         _ ->
             Html.text ""
@@ -132,22 +132,30 @@ nodeForm { id, label } =
         labelForm NodeLabelEdit NodeLabelEditConfirm "Node text" currentText label.x label.y
 
 
-edgeForm : GraphEdge -> Html Msg
-edgeForm ({ from, to, label } as edge) =
+edgeForm : GraphEdge -> ModelGraph -> Html Msg
+edgeForm ({ from, to, label } as edge) graph =
     let
-        (EdgeLabel bbox currentText) =
+        (EdgeLabel _ currentText) =
             edge.label
 
-        ( x, y ) =
-            case bbox of
-                -- TODO what to do if edge text bounding box not set?
-                Nothing ->
-                    ( 300, 300 )
+        -- The form edge is to be rendered at the center of the edge
+        ( formX, formY ) =
+            let
+                fromNodeLabel =
+                    GraphUtil.getNode from graph |> .label
 
-                Just { x, y } ->
-                    ( round x, round y )
+                toNodeLabel =
+                    GraphUtil.getNode to graph |> .label
+            in
+                ( (fromNodeLabel.x + toNodeLabel.x) // 2
+                , (fromNodeLabel.y + toNodeLabel.y) // 2
+                )
     in
-        labelForm EdgeLabelEdit EdgeLabelEditConfirm "Edge text" currentText x y
+        labelForm EdgeLabelEdit EdgeLabelEditConfirm "Edge text" currentText formX formY
+
+
+
+-- TODO 95 and 13 are hardcoded halves of the size of the input field in the form
 
 
 labelForm : (String -> Msg) -> Msg -> String -> String -> Int -> Int -> Html Msg

@@ -19,4 +19,3 @@ Simple editor for creating graphs implemented purely in Elm.
 - [ ] When drag & dropping nodes, it's possible to drag node outside of canvas
 - [ ] When drag & dropping nodes, the edge bounding boxes are not moved
 - [ ] When opening node edit form input autofocus doesn't work - use https://stackoverflow.com/questions/31901397/how-to-set-focus-on-an-element-in-elm
-- [ ] When edge text is set to empty (or white spaces only) the bounding box is at 0 0 and not in the middle of the edge
