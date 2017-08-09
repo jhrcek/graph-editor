@@ -3,10 +3,13 @@ port module Ports
         ( setBoundingBox
         , requestNodeTextBoundingBox
         , requestEdgeTextBoundingBox
+        , requestBoundingBoxesForEverything
+        , requestBoundingBoxesForContext
         )
 
-import Types exposing (BBox, Msg)
-import Graph exposing (NodeId)
+import Graph exposing (NodeContext, NodeId)
+import Types exposing (BBox, ModelGraph, Msg, NodeLabel, EdgeLabel)
+import IntDict
 
 
 requestNodeTextBoundingBox : NodeId -> Cmd msg
@@ -17,6 +20,41 @@ requestNodeTextBoundingBox nodeId =
 requestEdgeTextBoundingBox : NodeId -> NodeId -> Cmd msg
 requestEdgeTextBoundingBox fromId toId =
     requestBoundingBox (toString fromId ++ ":" ++ toString toId)
+
+
+requestBoundingBoxesForEverything : ModelGraph -> Cmd Msg
+requestBoundingBoxesForEverything graph =
+    let
+        nodeBbReqs =
+            Graph.nodeIds graph
+                |> List.map requestNodeTextBoundingBox
+                |> Cmd.batch
+
+        edgeBbReqs =
+            Graph.edges graph
+                |> List.map (\e -> requestEdgeTextBoundingBox e.from e.to)
+                |> Cmd.batch
+    in
+        Cmd.batch [ nodeBbReqs, edgeBbReqs ]
+
+
+requestBoundingBoxesForContext : Maybe (NodeContext NodeLabel EdgeLabel) -> Cmd Msg
+requestBoundingBoxesForContext mctx =
+    Maybe.map requestBoundingBoxesForContextHelper mctx
+        |> Maybe.withDefault Cmd.none
+
+
+requestBoundingBoxesForContextHelper : NodeContext NodeLabel EdgeLabel -> Cmd Msg
+requestBoundingBoxesForContextHelper ctx =
+    let
+        nodeId =
+            ctx.node.id
+    in
+        Cmd.batch
+            [ requestNodeTextBoundingBox nodeId
+            , IntDict.keys ctx.outgoing |> List.map (\to -> requestEdgeTextBoundingBox nodeId to) |> Cmd.batch
+            , IntDict.keys ctx.incoming |> List.map (\from -> requestEdgeTextBoundingBox from nodeId) |> Cmd.batch
+            ]
 
 
 

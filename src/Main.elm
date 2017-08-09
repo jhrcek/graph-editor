@@ -1,11 +1,11 @@
 module Main exposing (..)
 
-import Graph exposing (Graph, NodeContext, NodeId, Edge)
+import Graph exposing (Edge, Graph, NodeContext, NodeId)
 import GraphUtil
 import Html exposing (Html)
 import Mouse exposing (Position)
-import Types exposing (..)
 import Ports
+import Types exposing (..)
 import View
 
 
@@ -46,24 +46,8 @@ init =
       , draggedNode = Nothing
       , editorMode = NodeEditMode Nothing
       }
-    , requestBoundingBoxes initialGraph
+    , Ports.requestBoundingBoxesForEverything initialGraph
     )
-
-
-requestBoundingBoxes : ModelGraph -> Cmd Msg
-requestBoundingBoxes graph =
-    let
-        nodeBbReqs =
-            Graph.nodeIds graph
-                |> List.map Ports.requestNodeTextBoundingBox
-                |> Cmd.batch
-
-        edgeBbReqs =
-            Graph.edges graph
-                |> List.map (\e -> Ports.requestEdgeTextBoundingBox e.from e.to)
-                |> Cmd.batch
-    in
-        Cmd.batch [ nodeBbReqs, edgeBbReqs ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -238,11 +222,18 @@ processDragMsg msg model =
 
         DragEnd _ ->
             let
-                newGraph =
-                    Maybe.map (\drag -> GraphUtil.updateDraggedNode drag model.graph) model.draggedNode
-                        |> Maybe.withDefault model.graph
+                ( newGraph, command ) =
+                    Maybe.map
+                        (\drag ->
+                            ( GraphUtil.updateDraggedNode drag model.graph
+                              -- After dnd completed, only update bounding boxes of 1. node 2. its incoming and 3. its outgoing edges.
+                            , Ports.requestBoundingBoxesForContext <| Graph.get drag.nodeId model.graph
+                            )
+                        )
+                        model.draggedNode
+                        |> Maybe.withDefault ( model.graph, Cmd.none )
             in
-                { model | graph = newGraph, draggedNode = Nothing } ! [ requestBoundingBoxes model.graph ]
+                { model | graph = newGraph, draggedNode = Nothing } ! [ command ]
 
 
 makeNode : NodeId -> Int -> Int -> String -> GraphNode
