@@ -49,12 +49,12 @@ type Msg
     | NodeDrag DragMsg
       -- Editing Node label
     | NodeLabelEditStart GraphNode
-    | NodeEditConfirm
     | NodeLabelEdit String
+    | NodeLabelEditConfirm
       -- Editing Edge label
     | EdgeLabelEditStart GraphEdge
     | EdgeLabelEdit String
-    | EdgeLabelConfirm
+    | EdgeLabelEditConfirm
       -- Creating Edges
     | StartNodeOfEdgeSelected NodeId
     | EndNodeOfEdgeSelected NodeId

@@ -129,7 +129,7 @@ nodeForm { id, label } =
         currentText =
             (nodeTextToString label.nodeText)
     in
-        labelForm NodeLabelEdit NodeEditConfirm "Node text" currentText label.x label.y
+        labelForm NodeLabelEdit NodeLabelEditConfirm "Node text" currentText label.x label.y
 
 
 edgeForm : GraphEdge -> Html Msg
@@ -147,7 +147,7 @@ edgeForm ({ from, to, label } as edge) =
                 Just { x, y } ->
                     ( round x, round y )
     in
-        labelForm EdgeLabelEdit EdgeLabelConfirm "Edge text" currentText x y
+        labelForm EdgeLabelEdit EdgeLabelEditConfirm "Edge text" currentText x y
 
 
 labelForm : (String -> Msg) -> Msg -> String -> String -> Int -> Int -> Html Msg
