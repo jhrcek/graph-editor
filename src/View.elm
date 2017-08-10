@@ -175,20 +175,25 @@ labelForm editMsg confirmMsg placeholderVal currentValue x y =
 
 controlsPanel : EditorMode -> Html Msg
 controlsPanel currentMode =
-    div [ class "card card-outline-secondary", style [ ( "width", "10rem" ) ] ]
-        [ ul [ class "list-group list-group-flush" ]
-            [ modeView (currentMode == BrowsingMode) "Browse" BrowsingMode
-            , modeView (isNodeEditMode currentMode) "Edit nodes" (NodeEditMode Nothing)
-            , modeView (isEdgeEditMode currentMode) "Edit edges" (EdgeEditMode NothingSelected)
-            , modeView (currentMode == DeletionMode) "Deletion mode" DeletionMode
-            ]
+    div [ class "btn-group m-2" ]
+        [ modeView (currentMode == BrowsingMode) "Browse" BrowsingMode
+        , modeView (isNodeEditMode currentMode) "Edit nodes" (NodeEditMode Nothing)
+        , modeView (isEdgeEditMode currentMode) "Edit edges" (EdgeEditMode NothingSelected)
+        , modeView (currentMode == DeletionMode) "Remove" DeletionMode
         ]
 
 
 modeView : Bool -> String -> EditorMode -> Html Msg
 modeView isActive modeText mode =
-    li [ classList [ ( "list-group-item", True ), ( "active", isActive ) ], onClick (SetMode mode) ]
-        [ text modeText ]
+    let
+        btnClass =
+            if isActive then
+                "btn btn-primary"
+            else
+                "btn btn-secondary"
+    in
+        button [ type_ "button", class btnClass, onClick (SetMode mode) ]
+            [ text modeText ]
 
 
 labelInputId : String
