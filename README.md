@@ -18,7 +18,6 @@ Simple editor for creating graphs implemented purely in Elm.
     - [ ] User can choose whether to automatically open edge edit form after creating edge
 
 # TODOs & Issues
-- [ ] When drag & dropping nodes, it's possible to drag node outside of canvas
-- [ ] add empty canvas instruction like "Click anywhere to create new node"
+- [ ] Add empty canvas instruction like "Click anywhere to create new node"
 - [ ] Collapse Node / Edge edit modes into 1 edit mode if possible
 - [ ] Rename browse into Organize and disable non-moving actions in this mode

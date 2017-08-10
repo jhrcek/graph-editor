@@ -148,7 +148,10 @@ getDraggedNodePosition : Drag -> NodeLabel -> NodeLabel
 getDraggedNodePosition { nodeId, start, current } nodeLabel =
     { nodeLabel
         | x = nodeLabel.x + current.x - start.x
-        , y = nodeLabel.y + current.y - start.y
+
+        -- Make it impossible to drag node outside of the canvas.
+        -- For some reason this is only an issue when dragging past the TOP of viewport
+        , y = max 0 (nodeLabel.y + current.y - start.y)
     }
 
 
