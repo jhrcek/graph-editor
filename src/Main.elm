@@ -135,7 +135,7 @@ update msg model =
                 ( newGraph, command ) =
                     case model.editorMode of
                         EdgeEditMode (FromSelected startNodeId _) ->
-                            ( GraphUtil.insertEdge { from = startNodeId, to = endNodeId, label = EdgeLabel Nothing "\t" } model.graph
+                            ( GraphUtil.insertEdge { from = startNodeId, to = endNodeId, label = EdgeLabel Nothing "" } model.graph
                             , Ports.requestEdgeTextBoundingBox startNodeId endNodeId
                             )
 

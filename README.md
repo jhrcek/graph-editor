@@ -19,3 +19,5 @@ Simple editor for creating graphs implemented purely in Elm.
 
 # TODOs & Issues
 - [ ] When drag & dropping nodes, it's possible to drag node outside of canvas
+- [ ] refactor mode selection buttons to be horizontal
+- [ ] add empty canvas instruction like "Click anywhere to create new node"

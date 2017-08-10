@@ -103,12 +103,16 @@ positionedText xCoord yCoord elementId textContent additionalAttributes =
 
 getBoxWidth : NodeText -> Int
 getBoxWidth (NodeText mBBox str) =
-    case mBBox of
-        Nothing ->
-            characterWidthPixels * String.length str
+    -- When there's no text in the node, render it as a square
+    if String.isEmpty str then
+        boxHeight
+    else
+        case mBBox of
+            Nothing ->
+                characterWidthPixels * String.length str
 
-        Just bbox ->
-            characterWidthPixels + round bbox.width
+            Just bbox ->
+                characterWidthPixels + round bbox.width
 
 
 edgeArrow : GraphEdge -> GraphNode -> GraphNode -> EditorMode -> Svg Msg
