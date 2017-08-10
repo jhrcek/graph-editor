@@ -68,7 +68,7 @@ update msg model =
             processDragMsg dragMsg model
 
         NodeLabelEditStart node ->
-            { model | editorMode = NodeEditMode (Just node) } ! []
+            { model | editorMode = NodeEditMode (Just node) } ! [ View.focusLabelInput ]
 
         NodeLabelEdit newNodeText ->
             let
@@ -97,7 +97,7 @@ update msg model =
                 { model | graph = newGraph, editorMode = NodeEditMode Nothing } ! [ command ]
 
         EdgeLabelEditStart edge ->
-            { model | editorMode = EdgeEditMode (EditingEdgeLabel edge) } ! []
+            { model | editorMode = EdgeEditMode (EditingEdgeLabel edge) } ! [ View.focusLabelInput ]
 
         EdgeLabelEdit newText ->
             let

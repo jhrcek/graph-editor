@@ -1,6 +1,6 @@
 {
     "version": "1.0.0",
-    "summary": "Simple editor for creating graphs",
+    "summary": "Simple editor for creating directed graphs",
     "repository": "https://github.com/jhrcek/graph-editor.git",
     "license": "BSD3",
     "source-directories": [
@@ -11,6 +11,7 @@
         "elm-community/graph": "3.0.2 <= v < 4.0.0",
         "elm-community/intdict": "2.0.0 <= v < 3.0.0",
         "elm-lang/core": "5.1.1 <= v < 6.0.0",
+        "elm-lang/dom": "1.1.1 <= v < 2.0.0",
         "elm-lang/html": "2.0.0 <= v < 3.0.0",
         "elm-lang/mouse": "1.0.1 <= v < 2.0.0",
         "elm-lang/svg": "2.0.0 <= v < 3.0.0",

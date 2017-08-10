@@ -13,9 +13,9 @@ Simple editor for creating graphs implemented purely in Elm.
 - [x] Node text is editable - double clicking node opens node edit form to set node text, enter confirms the edit
 - [x] Edge text is editable - double clicking edge opens edge edit form to set edge text, enter confirms the edit
 - [x] Nodes and Edges can be deleted in *Deletion mode* - clicking node/edge removes it from the graph
-
+- [ ] Interactive help can be turned on/off. When on, help is provided for currently selected editor mode
+- [ ] Customizable editing process
+    - [ ] User can choose whether to automatically open edge edit form after creating edge
 
 # TODOs & Issues
 - [ ] When drag & dropping nodes, it's possible to drag node outside of canvas
-- [ ] When drag & dropping nodes, the edge bounding boxes are not moved
-- [ ] When opening node edit form input autofocus doesn't work - use https://stackoverflow.com/questions/31901397/how-to-set-focus-on-an-element-in-elm

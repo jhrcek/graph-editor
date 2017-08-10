@@ -1,6 +1,7 @@
-module View exposing (view)
+module View exposing (view, focusLabelInput)
 
 import Canvas
+import Dom
 import Graph exposing (Edge, NodeId)
 import GraphUtil
 import Html exposing (Html, button, div, form, h3, input, label, li, span, text, ul)
@@ -8,6 +9,7 @@ import Html.Attributes as Attr exposing (class, classList, id, name, placeholder
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Svg exposing (Svg)
 import SvgMouse
+import Task
 import Types exposing (..)
 
 
@@ -168,7 +170,7 @@ labelForm editMsg confirmMsg placeholderVal currentValue x y =
             , ( "top", toString (y - 13) ++ "px" )
             ]
         ]
-        [ input [ type_ "text", placeholder placeholderVal, value currentValue, onInput editMsg ] [] ]
+        [ input [ type_ "text", placeholder placeholderVal, value currentValue, onInput editMsg, id labelInputId ] [] ]
 
 
 controlsPanel : EditorMode -> Html Msg
@@ -187,3 +189,15 @@ modeView : Bool -> String -> EditorMode -> Html Msg
 modeView isActive modeText mode =
     li [ classList [ ( "list-group-item", True ), ( "active", isActive ) ], onClick (SetMode mode) ]
         [ text modeText ]
+
+
+labelInputId : String
+labelInputId =
+    "labelForm"
+
+
+focusLabelInput : Cmd Msg
+focusLabelInput =
+    Dom.focus labelInputId
+        -- focusing DOM element might fail if the element with given id is not found - ignoring this case
+        |> Task.attempt (\focusResult -> NoOp)
