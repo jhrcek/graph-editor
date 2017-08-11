@@ -2,7 +2,8 @@ module Canvas exposing (boxedText, edgeArrow, drawEdge, svgDefs)
 
 import Graph exposing (NodeId)
 import Svg exposing (Svg, g, rect, text, text_)
-import Svg.Attributes exposing (alignmentBaseline, d, fill, fillOpacity, fontFamily, fontSize, height, id, markerEnd, markerHeight, markerUnits, markerWidth, orient, refX, refY, rx, ry, stroke, strokeWidth, style, textAnchor, transform, width, x, x1, x2, y, y1, y2)
+import Svg.Attributes exposing (alignmentBaseline, d, fill, fillOpacity, fontFamily, fontSize, height, id, markerEnd, markerHeight, markerUnits, markerWidth, orient, refX, refY, rx, ry, stroke, strokeWidth, textAnchor, transform, width, x, x1, x2, y, y1, y2)
+import Html.Attributes exposing (style)
 import SvgMouse
 import Types exposing (..)
 
@@ -25,7 +26,7 @@ boxedText ({ id, label } as node) editorMode =
         modeDependentAttributes =
             case editorMode of
                 MoveMode ->
-                    [ onClickStartDrag id, style "cursor: move;" ]
+                    [ onClickStartDrag id, style [ ( "cursor", "move" ) ] ]
 
                 EditMode editState ->
                     case editState of
@@ -51,7 +52,7 @@ boxedText ({ id, label } as node) editorMode =
                             []
 
                 DeletionMode ->
-                    [ onClickDeleteNode id, style "cursor: not-allowed;" ]
+                    [ onClickDeleteNode id, style [ ( "cursor", "not-allowed" ) ] ]
 
         nodeTextId =
             toString id
@@ -87,7 +88,7 @@ positionedText xCoord yCoord elementId textContent additionalAttributes =
          , id elementId
 
          --prevent text to be selectable by click+dragging
-         , style "user-select: none; -moz-user-select: none;"
+         , style [ ( "user-select", "none" ), ( "-moz-user-select", "none" ) ]
          ]
             ++ additionalAttributes
         )
@@ -150,7 +151,7 @@ edgeArrow edge fromNode toNode editorMode =
         modeDependentAttributes =
             case editorMode of
                 DeletionMode ->
-                    [ onClickDeleteEdge fromNode.id toNode.id, style "cursor: not-allowed;" ]
+                    [ onClickDeleteEdge fromNode.id toNode.id, style [ ( "cursor", "not-allowed" ) ] ]
 
                 EditMode _ ->
                     [ onDoubleClickStartEdgeLabelEdit edge, SvgMouse.onMouseDownStopPropagation NoOp ]
