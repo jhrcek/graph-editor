@@ -22,37 +22,30 @@ boxedText ({ id, label } as node) editorMode =
         boxCenterY =
             boxHeight // 2
 
-        fillColor =
-            case editorMode of
-                EdgeEditMode (FromSelected selectedNodeId _) ->
-                    if id == selectedNodeId then
-                        "lightgray"
-                    else
-                        "white"
-
-                _ ->
-                    "white"
-
         modeDependentAttributes =
             case editorMode of
-                BrowsingMode ->
+                MoveMode ->
                     [ onClickStartDrag id, style "cursor: move;" ]
 
-                NodeEditMode _ ->
-                    [ onClickStartDrag id
-                    , onDoubleClickStartNodeLabelEdit node
-                    ]
-
-                EdgeEditMode edgeEditState ->
-                    case edgeEditState of
-                        NothingSelected ->
+                EditMode editState ->
+                    case editState of
+                        EditingNothing ->
                             [ onMouseDownSelectStartingNode id ]
 
-                        FromSelected selectedNodeId _ ->
-                            if id /= selectedNodeId then
-                                [ onMouseUpCreateEdge id ]
-                            else
-                                [ SvgMouse.onMouseUpUnselectStartNode ]
+                        CreatingEdge selectedNodeId _ ->
+                            let
+                                edgeCreationEvent =
+                                    if id /= selectedNodeId then
+                                        onMouseUpCreateEdge id
+                                    else
+                                        SvgMouse.onMouseUpUnselectStartNode
+                            in
+                                [ edgeCreationEvent
+                                , onDoubleClickStartNodeLabelEdit node
+                                ]
+
+                        EditingNodeLabel _ ->
+                            []
 
                         EditingEdgeLabel _ ->
                             []
@@ -72,7 +65,7 @@ boxedText ({ id, label } as node) editorMode =
                  , ry "4"
                  , stroke "black"
                  , strokeWidth "1"
-                 , fill fillColor
+                 , fill "white"
                  ]
                     ++ modeDependentAttributes
                 )
@@ -159,7 +152,7 @@ edgeArrow edge fromNode toNode editorMode =
                 DeletionMode ->
                     [ onClickDeleteEdge fromNode.id toNode.id, style "cursor: not-allowed;" ]
 
-                EdgeEditMode _ ->
+                EditMode _ ->
                     [ onDoubleClickStartEdgeLabelEdit edge, SvgMouse.onMouseDownStopPropagation NoOp ]
 
                 _ ->

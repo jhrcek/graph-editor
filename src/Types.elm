@@ -13,9 +13,8 @@ module Types
         , setEdgeText
         , Drag
         , EditorMode(..)
-        , isNodeEditMode
-        , isEdgeEditMode
-        , EdgeEditState(..)
+        , isEditMode
+        , EditState(..)
         , getDraggedNodePosition
         , BBox
         )
@@ -112,36 +111,26 @@ setEdgeText newText (EdgeLabel mbbox _) =
 
 
 type EditorMode
-    = BrowsingMode
-    | NodeEditMode (Maybe GraphNode)
-    | EdgeEditMode EdgeEditState
+    = MoveMode
+    | EditMode EditState
     | DeletionMode
 
 
-isNodeEditMode : EditorMode -> Bool
-isNodeEditMode mode =
+isEditMode : EditorMode -> Bool
+isEditMode mode =
     case mode of
-        NodeEditMode _ ->
+        EditMode _ ->
             True
 
         _ ->
             False
 
 
-isEdgeEditMode : EditorMode -> Bool
-isEdgeEditMode mode =
-    case mode of
-        EdgeEditMode _ ->
-            True
-
-        _ ->
-            False
-
-
-type EdgeEditState
-    = NothingSelected
-    | FromSelected NodeId Mouse.Position
+type EditState
+    = EditingNothing
+    | CreatingEdge NodeId Mouse.Position
     | EditingEdgeLabel GraphEdge
+    | EditingNodeLabel GraphNode
 
 
 getDraggedNodePosition : Drag -> NodeLabel -> NodeLabel

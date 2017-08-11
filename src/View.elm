@@ -28,10 +28,10 @@ viewCanvas editorMode graph draggedNode =
     let
         canvasEventListeners =
             case editorMode of
-                NodeEditMode _ ->
+                EditMode EditingNothing ->
                     [ SvgMouse.onCanvasMouseDown CreateNode ]
 
-                EdgeEditMode (FromSelected _ _) ->
+                EditMode (CreatingEdge _ _) ->
                     [ SvgMouse.onMouseUpUnselectStartNode ]
 
                 _ ->
@@ -55,7 +55,7 @@ viewCanvas editorMode graph draggedNode =
 getEdgeBeingCreated : EditorMode -> ModelGraph -> Svg Msg
 getEdgeBeingCreated editorMode graph =
     case editorMode of
-        EdgeEditMode (FromSelected nodeId mousePosition) ->
+        EditMode (CreatingEdge nodeId mousePosition) ->
             let
                 fromNode =
                     GraphUtil.getNode nodeId graph
@@ -108,7 +108,7 @@ applyDrag mDrag node =
 viewNodeForm : EditorMode -> Html Msg
 viewNodeForm editorMode =
     case editorMode of
-        NodeEditMode (Just node) ->
+        EditMode (EditingNodeLabel node) ->
             nodeForm node
 
         _ ->
@@ -118,7 +118,7 @@ viewNodeForm editorMode =
 viewEdgeForm : EditorMode -> ModelGraph -> Html Msg
 viewEdgeForm editorMode graph =
     case editorMode of
-        EdgeEditMode (EditingEdgeLabel edge) ->
+        EditMode (EditingEdgeLabel edge) ->
             edgeForm edge graph
 
         _ ->
@@ -176,10 +176,9 @@ labelForm editMsg confirmMsg placeholderVal currentValue x y =
 controlsPanel : EditorMode -> Html Msg
 controlsPanel currentMode =
     div [ class "btn-group m-2" ]
-        [ modeView (currentMode == BrowsingMode) "Browse" BrowsingMode
-        , modeView (isNodeEditMode currentMode) "Edit nodes" (NodeEditMode Nothing)
-        , modeView (isEdgeEditMode currentMode) "Edit edges" (EdgeEditMode NothingSelected)
-        , modeView (currentMode == DeletionMode) "Remove" DeletionMode
+        [ modeView (isEditMode currentMode) "Create/Edit" (EditMode EditingNothing)
+        , modeView (currentMode == MoveMode) "Move" MoveMode
+        , modeView (currentMode == DeletionMode) "Delete" DeletionMode
         ]
 
 

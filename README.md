@@ -2,22 +2,21 @@
 
 Simple editor for creating graphs implemented purely in Elm.
 
-# Features
-- [x] *Browse* mode enables
-    - [x] viewing graphs
-    - [x] rearranging nodes via drag and drop
-    - [ ] turning on automatic graph layout
-    - [ ] Ability to save / load multiple graphs in local storage
-- [x] Nodes can be created in *Edit nodes* mode by clicking on the canvas
-- [x] Edges can be created in *Edit edges* mode by clicking and dragging from start node and releasing on end node. Releasing outside of node cancels edge creation.
-- [x] Node text is editable - double clicking node opens node edit form to set node text, enter confirms the edit
-- [x] Edge text is editable - double clicking edge opens edge edit form to set edge text, enter confirms the edit
-- [x] Nodes and Edges can be deleted in *Remove* mode - clicking node/edge removes it from the graph
-- [ ] Interactive help can be turned on/off. When on, help is provided for currently selected editor mode
-- [ ] Customizable editing process
-    - [ ] User can choose whether to automatically open edge edit form after creating edge
+# Current features
+- [x] The editor has 3 modes, each mode determines what user interactions are doing with the graph
+    - [x] In *Move* mode you can arrange nodes on the canvas using drag and drop.
+    - [x] In *Create/Edit* mode you can
+        - [x] Create new nodes by clicking on the canvas (double click to immediately start editing node text).
+        - [x] Edit node text by double clicking node. Enter confirms the edit.
+        - [x] Create new edges by click & holding mouse button on initial node and dropping on target node.
+        - [x] Edit edge text by double clicking edges. Enter confirms the edit.
+    - [x] In *Delete* mode you can remove nodes and edges by clicking them.
 
-# TODOs & Issues
+# Upcoming Features
+- [ ] Automatic layout of graph using force directed layout algorithm
+- [ ] Ability to save / load multiple graphs in local storage
+- [ ] Interactive help that can be turned on/off. When on, hints about what actions are available are provided for each editor mode.
+
+# TODOs
 - [ ] Add empty canvas instruction like "Click anywhere to create new node"
-- [ ] Collapse Node / Edge edit modes into 1 edit mode if possible
-- [ ] Rename browse into Organize and disable non-moving actions in this mode
+- [ ] Add mode dependent SVG cursors to make semantics of mouse actions clearer

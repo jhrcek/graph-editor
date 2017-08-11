@@ -65,7 +65,7 @@ onMouseUp msg =
 
 onMouseUpUnselectStartNode : Attribute Msg
 onMouseUpUnselectStartNode =
-    Svg.Events.onMouseUp UnselectStartNodeOfEdge
+    onWithOptions "mouseup" stopPropagationOptions (Json.succeed UnselectStartNodeOfEdge)
 
 
 {-| options to prevent clicks on canvas nodes triggering click events on canvas itself
