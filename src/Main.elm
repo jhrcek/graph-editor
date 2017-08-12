@@ -23,6 +23,7 @@ init =
       , draggedNode = Nothing
       , editorMode = EditMode EditingNothing
       , helpEnabled = False
+      , aboutEnabled = False
       , windowSize = { width = 800, height = 600 }
       }
     , Cmd.batch
@@ -157,6 +158,9 @@ update msg model =
 
         ToggleHelp flag ->
             { model | helpEnabled = flag } ! []
+
+        ToggleAbout flag ->
+            { model | aboutEnabled = flag } ! []
 
         WindowResized sz ->
             { model | windowSize = sz } ! []

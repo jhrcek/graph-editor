@@ -4,7 +4,7 @@ import Canvas
 import Dom
 import Graph exposing (Edge, NodeId)
 import GraphUtil
-import Html exposing (Html, button, div, form, h3, input, text)
+import Html exposing (Html, a, button, div, form, h3, input, text)
 import Html.Attributes as Attr exposing (class, id, placeholder, size, style, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Markdown
@@ -17,13 +17,14 @@ import Window
 
 
 view : Model -> Html Msg
-view ({ graph, draggedNode, editorMode, helpEnabled, windowSize } as model) =
+view ({ graph, draggedNode, editorMode, windowSize } as model) =
     Html.div []
         [ viewCanvas editorMode graph draggedNode windowSize
-        , controlsPanel editorMode helpEnabled
+        , controlsPanel editorMode
         , viewNodeForm editorMode
         , viewEdgeForm editorMode graph
-        , viewHelp helpEnabled
+        , helpModal model.helpEnabled
+        , aboutModal model.aboutEnabled
         ]
 
 
@@ -195,11 +196,11 @@ labelForm editMsg confirmMsg placeholderVal currentValue x y =
         ]
 
 
-controlsPanel : EditorMode -> Bool -> Html Msg
-controlsPanel editorMode helpEnabled =
+controlsPanel : EditorMode -> Html Msg
+controlsPanel editorMode =
     div []
         [ modeButtons editorMode
-        , helpButton helpEnabled
+        , helpAndAboutButtons
         ]
 
 
@@ -225,27 +226,27 @@ modeButton isActive modeText mode =
             [ text modeText ]
 
 
-helpButton : Bool -> Html Msg
-helpButton helpEnabled =
+helpAndAboutButtons : Html Msg
+helpAndAboutButtons =
     div [ class "btn-group m-2", style [ ( "position", "absolute" ), ( "right", "0px" ) ] ]
-        [ button [ type_ "button", class "btn btn-secondary", onClick (ToggleHelp True) ]
-            [ text "Help" ]
+        [ button [ type_ "button", class "btn btn-secondary", onClick (ToggleHelp True) ] [ text "Help" ]
+        , button [ type_ "button", class "btn btn-secondary", onClick (ToggleAbout True) ] [ text "About" ]
         ]
 
 
-viewHelp : Bool -> Html Msg
-viewHelp helpEnabled =
-    viewIf helpEnabled <|
+modalDialog : Bool -> Msg -> String -> Html Msg -> Html Msg
+modalDialog enabled closeMsg modalTitle content =
+    viewIf enabled <|
         div []
             [ div [ class "modal fade show", style [ ( "display", "block" ) ] ]
                 [ div [ class "modal-dialog" ]
                     [ div [ class "modal-content" ]
                         [ div [ class "modal-header" ]
-                            [ h3 [ class "modal-title" ] [ text "Elm Graph Editor Help" ]
-                            , button [ class "close", type_ "button", onClick (ToggleHelp False) ] [ text "×" ]
+                            [ h3 [ class "modal-title" ] [ text modalTitle ]
+                            , button [ class "close", type_ "button", onClick closeMsg ] [ text "×" ]
                             ]
                         , div [ class "modal-body" ]
-                            [ helpContent ]
+                            [ content ]
                         ]
                     ]
                 ]
@@ -253,10 +254,15 @@ viewHelp helpEnabled =
             ]
 
 
+helpModal : Bool -> Html Msg
+helpModal helpEnabled =
+    modalDialog helpEnabled (ToggleHelp False) "Help" helpContent
+
+
 helpContent : Html a
 helpContent =
     Markdown.toHtml [] """
-This is simple editor for creating directed graphs.
+**Elm Graph Editor** is simple editor for creating [directed graphs](https://en.wikipedia.org/wiki/Directed_graph).
 It has three modes: *Create/Edit*, *Move* and *Delete*.
 Each modes makes different graph editing actions available.
 
@@ -270,6 +276,24 @@ In **Move** mode you can organize your nodes by drag & drop: click and hold the 
 
 In **Delete** mode you can remove nodes and edges from the graph by just clicking them. Removing a node removes all its incoming and outgoing edges.
   """
+
+
+aboutModal : Bool -> Html Msg
+aboutModal aboutEnabled =
+    modalDialog aboutEnabled (ToggleAbout False) "About" aboutContent
+
+
+aboutContent : Html a
+aboutContent =
+    Markdown.toHtml [] """
+**Elm Graph Editor** version 1.0.0
+
+Implemented in [Elm](http://elm-lang.org/)
+
+Created by [Jan Hrček](http://janhrcek.cz)
+
+Source code available on [GitHub](https://github.com/jhrcek/graph-editor)
+    """
 
 
 viewIf : Bool -> Html Msg -> Html Msg

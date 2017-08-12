@@ -30,6 +30,7 @@ type alias Model =
     , draggedNode : Maybe Drag
     , editorMode : EditorMode
     , helpEnabled : Bool
+    , aboutEnabled : Bool
     , windowSize : Window.Size
     }
 
@@ -69,6 +70,7 @@ type Msg
     | SetMode EditorMode
     | SetBoundingBox BBox
     | ToggleHelp Bool
+    | ToggleAbout Bool
     | WindowResized Window.Size
     | NoOp
 
