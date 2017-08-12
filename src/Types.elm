@@ -28,6 +28,7 @@ type alias Model =
     , newNodeId : Int
     , draggedNode : Maybe Drag
     , editorMode : EditorMode
+    , helpEnabled : Bool
     }
 
 
@@ -65,6 +66,7 @@ type Msg
       -- Switching between modes
     | SetMode EditorMode
     | SetBoundingBox BBox
+    | ToggleHelp Bool
     | NoOp
 
 

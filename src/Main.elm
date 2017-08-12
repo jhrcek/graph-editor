@@ -45,6 +45,7 @@ init =
       , newNodeId = Graph.size initialGraph
       , draggedNode = Nothing
       , editorMode = EditMode EditingNothing
+      , helpEnabled = False
       }
     , Ports.requestBoundingBoxesForEverything initialGraph
     )
@@ -161,6 +162,9 @@ update msg model =
 
         SetBoundingBox bbox ->
             { model | graph = updateBoundingBox bbox model.graph } ! []
+
+        ToggleHelp flag ->
+            { model | helpEnabled = flag } ! []
 
         NoOp ->
             model ! []

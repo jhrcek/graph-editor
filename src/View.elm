@@ -4,22 +4,24 @@ import Canvas
 import Dom
 import Graph exposing (Edge, NodeId)
 import GraphUtil
-import Html exposing (Html, button, div, form, h3, input, label, li, span, text, ul)
-import Html.Attributes as Attr exposing (class, classList, id, name, placeholder, readonly, style, type_, value)
+import Html exposing (Html, div, button, text, h3, input, form)
+import Html.Attributes as Attr exposing (class, type_, style, value, placeholder, id)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Svg exposing (Svg)
 import SvgMouse
 import Task
 import Types exposing (..)
+import Markdown
 
 
 view : Model -> Html Msg
-view ({ graph, draggedNode, editorMode } as model) =
+view ({ graph, draggedNode, editorMode, helpEnabled } as model) =
     Html.div []
         [ viewCanvas editorMode graph draggedNode
-        , controlsPanel editorMode
+        , controlsPanel editorMode helpEnabled
         , viewNodeForm editorMode
         , viewEdgeForm editorMode graph
+        , viewHelp helpEnabled
         ]
 
 
@@ -173,17 +175,25 @@ labelForm editMsg confirmMsg placeholderVal currentValue x y =
         [ input [ type_ "text", placeholder placeholderVal, value currentValue, onInput editMsg, id labelInputId ] [] ]
 
 
-controlsPanel : EditorMode -> Html Msg
-controlsPanel currentMode =
-    div [ class "btn-group m-2" ]
-        [ modeView (isEditMode currentMode) "Create/Edit" (EditMode EditingNothing)
-        , modeView (currentMode == MoveMode) "Move" MoveMode
-        , modeView (currentMode == DeletionMode) "Delete" DeletionMode
+controlsPanel : EditorMode -> Bool -> Html Msg
+controlsPanel editorMode helpEnabled =
+    div []
+        [ modeButtons editorMode
+        , helpButton helpEnabled
         ]
 
 
-modeView : Bool -> String -> EditorMode -> Html Msg
-modeView isActive modeText mode =
+modeButtons : EditorMode -> Html Msg
+modeButtons currentMode =
+    div [ class "btn-group m-2" ]
+        [ modeButton (isEditMode currentMode) "Create/Edit" (EditMode EditingNothing)
+        , modeButton (currentMode == MoveMode) "Move" MoveMode
+        , modeButton (currentMode == DeletionMode) "Delete" DeletionMode
+        ]
+
+
+modeButton : Bool -> String -> EditorMode -> Html Msg
+modeButton isActive modeText mode =
     let
         btnClass =
             if isActive then
@@ -193,6 +203,61 @@ modeView isActive modeText mode =
     in
         button [ type_ "button", class btnClass, onClick (SetMode mode) ]
             [ text modeText ]
+
+
+helpButton : Bool -> Html Msg
+helpButton helpEnabled =
+    div [ class "btn-group m-2", style [ ( "position", "absolute" ), ( "right", "0px" ) ] ]
+        [ button [ type_ "button", class "btn btn-secondary", onClick (ToggleHelp True) ]
+            [ text "Help" ]
+        ]
+
+
+viewHelp : Bool -> Html Msg
+viewHelp helpEnabled =
+    viewIf helpEnabled <|
+        div []
+            [ div [ class "modal fade show", style [ ( "display", "block" ) ] ]
+                [ div [ class "modal-dialog" ]
+                    [ div [ class "modal-content" ]
+                        [ div [ class "modal-header" ]
+                            [ h3 [ class "modal-title" ] [ text "Elm Graph Editor Help" ]
+                            , button [ class "close", type_ "button", onClick (ToggleHelp False) ] [ text "×" ]
+                            ]
+                        , div [ class "modal-body" ]
+                            [ helpContent ]
+                        ]
+                    ]
+                ]
+            , div [ class "modal-backdrop fade show" ] []
+            ]
+
+
+helpContent : Html a
+helpContent =
+    Markdown.toHtml [] """
+This is simple editor for creating directed graphs.
+It has three modes: *Create/Edit*, *Move* and *Delete*.
+Each modes makes different graph editing actions available.
+
+In **Create/Edit** mode you can
+  * Create new nodes by **clicking** on the canvas
+  * Edit node text by **double clicking** nodes. Enter confirms the edit.
+  * Create new edges by **click & holding** mouse button on a node, dragging and **releasing mouse** on target node.
+  * Edit edge text by **double clicking** edges. Enter confirms the edit.
+
+In **Move** mode you can organize your nodes by drag & drop: click and hold the mouse on node, move it where you want and release the mouse button.
+
+In **Delete** mode you can remove nodes and edges from the graph by just clicking them. Removing a node removes all its incoming and outgoing edges.
+  """
+
+
+viewIf : Bool -> Html Msg -> Html Msg
+viewIf flag view =
+    if flag then
+        view
+    else
+        Html.text ""
 
 
 labelInputId : String

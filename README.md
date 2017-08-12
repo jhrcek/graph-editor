@@ -11,11 +11,14 @@ Simple editor for creating graphs implemented purely in Elm.
         - [x] Create new edges by click & holding mouse button on initial node and dropping on target node.
         - [x] Edit edge text by double clicking edges. Enter confirms the edit.
     - [x] In *Delete* mode you can remove nodes and edges by clicking them.
+- [x] Help button that shows/hides info about how users can create/edit graphs
 
 # Upcoming Features
+- [ ] Visualize / Export edited graph data in different formats
+    - [ ] [TGF](https://en.wikipedia.org/wiki/Trivial_Graph_Format)
+    - [ ] [DOT](https://en.wikipedia.org/wiki/DOT_(graph_description_language))
 - [ ] Automatic layout of graph using force directed layout algorithm
 - [ ] Ability to save / load multiple graphs in local storage
-- [ ] Interactive help that can be turned on/off. When on, hints about what actions are available are provided for each editor mode.
 
 # TODOs
 - [ ] Add empty canvas instruction like "Click anywhere to create new node"
