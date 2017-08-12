@@ -5,7 +5,7 @@ import Dom
 import Graph exposing (Edge, NodeId)
 import GraphUtil
 import Html exposing (Html, button, div, form, h3, input, text)
-import Html.Attributes as Attr exposing (class, id, placeholder, style, type_, value)
+import Html.Attributes as Attr exposing (class, id, placeholder, size, style, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Markdown
 import Svg exposing (Svg)
@@ -177,7 +177,7 @@ edgeForm ({ from, to, label } as edge) graph =
 
 
 
--- TODO 95 and 13 are hardcoded halves of the size of the input field in the form
+-- TODO 95 and 13 are hardcoded halves of the form size 190 x 30
 
 
 labelForm : (String -> Msg) -> Msg -> String -> String -> Int -> Int -> Html Msg
@@ -190,7 +190,9 @@ labelForm editMsg confirmMsg placeholderVal currentValue x y =
             , ( "top", toString (y - 13) ++ "px" )
             ]
         ]
-        [ input [ type_ "text", placeholder placeholderVal, value currentValue, onInput editMsg, id labelInputId ] [] ]
+        [ input [ type_ "text", placeholder placeholderVal, value currentValue, onInput editMsg, id labelInputId, size 15 ] []
+        , button [ onClick confirmMsg ] [ text "OK" ]
+        ]
 
 
 controlsPanel : EditorMode -> Bool -> Html Msg
