@@ -133,7 +133,18 @@ update msg model =
             setMousePositionIfCreatingEdge mousePosition model ! []
 
         DeleteNode nodeId ->
-            { model | graph = Graph.remove nodeId model.graph } ! []
+            let
+                newGraph =
+                    Graph.remove nodeId model.graph
+
+                newEditorMode =
+                    --after last node deleted switch back to node creation mode
+                    if Graph.isEmpty newGraph then
+                        EditMode EditingNothing
+                    else
+                        model.editorMode
+            in
+                { model | graph = newGraph, editorMode = newEditorMode } ! []
 
         DeleteEdge fromId toId ->
             { model | graph = GraphUtil.removeEdge fromId toId model.graph } ! []
