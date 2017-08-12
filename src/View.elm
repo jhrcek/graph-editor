@@ -4,20 +4,22 @@ import Canvas
 import Dom
 import Graph exposing (Edge, NodeId)
 import GraphUtil
-import Html exposing (Html, div, button, text, h3, input, form)
-import Html.Attributes as Attr exposing (class, type_, style, value, placeholder, id)
+import Html exposing (Html, button, div, form, h3, input, text)
+import Html.Attributes as Attr exposing (class, id, placeholder, style, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
+import Markdown
 import Svg exposing (Svg)
+import Svg.Attributes exposing (fill)
 import SvgMouse
 import Task
 import Types exposing (..)
-import Markdown
+import Window
 
 
 view : Model -> Html Msg
-view ({ graph, draggedNode, editorMode, helpEnabled } as model) =
+view ({ graph, draggedNode, editorMode, helpEnabled, windowSize } as model) =
     Html.div []
-        [ viewCanvas editorMode graph draggedNode
+        [ viewCanvas editorMode graph draggedNode windowSize
         , controlsPanel editorMode helpEnabled
         , viewNodeForm editorMode
         , viewEdgeForm editorMode graph
@@ -25,8 +27,8 @@ view ({ graph, draggedNode, editorMode, helpEnabled } as model) =
         ]
 
 
-viewCanvas : EditorMode -> ModelGraph -> Maybe Drag -> Html Msg
-viewCanvas editorMode graph draggedNode =
+viewCanvas : EditorMode -> ModelGraph -> Maybe Drag -> Window.Size -> Html Msg
+viewCanvas editorMode graph maybeDrag winSize =
     let
         canvasEventListeners =
             case editorMode of
@@ -40,18 +42,34 @@ viewCanvas editorMode graph draggedNode =
                     []
 
         svgElemAttributes =
-            canvasEventListeners ++ [ style [ ( "width", "100%" ), ( "height", "100%" ), ( "position", "fixed" ) ] ]
+            canvasEventListeners
+                ++ [ style
+                        [ ( "width", toString winSize.width ++ "px" )
+                        , ( "height", toString winSize.height ++ "px" )
+                        , ( "position", "fixed" )
+                        ]
+                   ]
+    in
+        Svg.svg svgElemAttributes <|
+            if Graph.isEmpty graph then
+                [ Canvas.positionedText (winSize.width // 2) (winSize.height // 2) "emptyGraphText" "Click anywhere to create first node" [ fill "grey" ] ]
+            else
+                nonEmptyGraphView editorMode maybeDrag graph
 
+
+nonEmptyGraphView : EditorMode -> Maybe Drag -> ModelGraph -> List (Svg Msg)
+nonEmptyGraphView editorMode maybeDrag graph =
+    let
         nodesView =
-            Graph.nodes graph |> List.map (viewNode draggedNode editorMode)
+            Graph.nodes graph |> List.map (viewNode maybeDrag editorMode)
 
         edgesView =
-            Graph.edges graph |> List.map (viewEdge graph draggedNode editorMode)
+            Graph.edges graph |> List.map (viewEdge graph maybeDrag editorMode)
 
         edgeBeingCreated =
             getEdgeBeingCreated editorMode graph
     in
-        Svg.svg svgElemAttributes <| Canvas.svgDefs :: edgeBeingCreated :: edgesView ++ nodesView
+        Canvas.svgDefs :: edgeBeingCreated :: edgesView ++ nodesView
 
 
 getEdgeBeingCreated : EditorMode -> ModelGraph -> Svg Msg

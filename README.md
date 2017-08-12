@@ -21,5 +21,4 @@ Simple editor for creating graphs implemented purely in Elm.
 - [ ] Ability to save / load multiple graphs in local storage
 
 # TODOs
-- [ ] Add empty canvas instruction like "Click anywhere to create new node"
 - [ ] Add mode dependent SVG cursors to make semantics of mouse actions clearer

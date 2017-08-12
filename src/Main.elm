@@ -4,39 +4,16 @@ import Graph exposing (Edge, Graph, NodeContext, NodeId)
 import GraphUtil
 import Html exposing (Html)
 import Mouse exposing (Position)
+import Task
 import Ports
 import Types exposing (..)
 import View
+import Window
 
 
 initialGraph : ModelGraph
 initialGraph =
-    Graph.fromNodesAndEdges
-        [ makeNode 0 550 300 "Socks"
-        , makeNode 1 400 300 "Shoes"
-        , makeNode 2 300 400 "Pan"
-        , makeNode 3 500 100 "Propagation"
-        , makeNode 4 800 50 "Category"
-        , makeNode 5 400 500 "Determinism"
-        , makeNode 6 700 350 "Conjugation"
-        , makeNode 7 250 150 "Infiltration"
-        , makeNode 8 50 350 "Joystick"
-        , makeNode 9 562 200 "Knife"
-        ]
-        [ makeEdge 0 1 "edge 1"
-        , makeEdge 1 2 "edge 2"
-        , makeEdge 1 3 "edge 3"
-        , makeEdge 1 5 "edge 4"
-        , makeEdge 1 3 "edge 5"
-        , makeEdge 8 7 "edge 6"
-        , makeEdge 4 3 "edge 7"
-        , makeEdge 5 6 "edge 8"
-        , makeEdge 1 5 "edge 9"
-        , makeEdge 9 3 "edge 10"
-        , makeEdge 8 7 "edge 11"
-        , makeEdge 9 0 "edge 12"
-        , makeEdge 2 8 "edge 13"
-        ]
+    Graph.empty
 
 
 init : ( Model, Cmd Msg )
@@ -46,8 +23,12 @@ init =
       , draggedNode = Nothing
       , editorMode = EditMode EditingNothing
       , helpEnabled = False
+      , windowSize = { width = 800, height = 600 }
       }
-    , Ports.requestBoundingBoxesForEverything initialGraph
+    , Cmd.batch
+        [ Ports.requestBoundingBoxesForEverything initialGraph
+        , Task.perform WindowResized Window.size
+        ]
     )
 
 
@@ -166,6 +147,9 @@ update msg model =
         ToggleHelp flag ->
             { model | helpEnabled = flag } ! []
 
+        WindowResized sz ->
+            { model | windowSize = sz } ! []
+
         NoOp ->
             model ! []
 
@@ -266,6 +250,7 @@ subscriptions model =
         [ nodeDragDropSubscriptions model.draggedNode
         , edgeCreationSubscriptions model.editorMode
         , Ports.setBoundingBox SetBoundingBox
+        , Window.resizes WindowResized
         ]
 
 

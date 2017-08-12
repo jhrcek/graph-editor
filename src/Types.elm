@@ -19,6 +19,7 @@ module Types
         , BBox
         )
 
+import Window
 import Mouse exposing (Position)
 import Graph exposing (NodeId, Graph, Edge)
 
@@ -29,6 +30,7 @@ type alias Model =
     , draggedNode : Maybe Drag
     , editorMode : EditorMode
     , helpEnabled : Bool
+    , windowSize : Window.Size
     }
 
 
@@ -67,6 +69,7 @@ type Msg
     | SetMode EditorMode
     | SetBoundingBox BBox
     | ToggleHelp Bool
+    | WindowResized Window.Size
     | NoOp
 
 

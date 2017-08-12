@@ -1,4 +1,4 @@
-module Canvas exposing (boxedText, edgeArrow, drawEdge, svgDefs)
+module Canvas exposing (boxedText, edgeArrow, drawEdge, svgDefs, positionedText)
 
 import Graph exposing (NodeId)
 import Svg exposing (Svg, g, rect, text, text_)
@@ -46,7 +46,7 @@ boxedText ({ id, label } as node) editorMode =
                                 ]
 
                         EditingNodeLabel _ ->
-                            []
+                            [ onDoubleClickStartNodeLabelEdit node ]
 
                         EditingEdgeLabel _ ->
                             []
@@ -195,10 +195,8 @@ drawEdge fromLabel xTo yTo edgeTextId edge attrList =
                          , height (toString bbox.height)
                          , x (toString bbox.x)
                          , y (toString bbox.y)
-                         , fill "lightsalmon"
+                         , fill "white"
                          , fillOpacity "0.8"
-                         , stroke "black"
-                         , strokeWidth "1"
                          ]
                             ++ attrs
                         )
