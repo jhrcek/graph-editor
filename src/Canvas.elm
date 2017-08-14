@@ -1,9 +1,9 @@
 module Canvas exposing (boxedText, edgeArrow, drawEdge, svgDefs, positionedText)
 
 import Graph exposing (NodeId)
-import Svg exposing (Svg, g, rect, text, text_)
-import Svg.Attributes exposing (alignmentBaseline, d, fill, fillOpacity, fontFamily, fontSize, height, id, markerEnd, markerHeight, markerUnits, markerWidth, orient, refX, refY, rx, ry, stroke, strokeWidth, textAnchor, transform, width, x, x1, x2, y, y1, y2)
 import Html.Attributes exposing (style)
+import Svg exposing (Svg, g, rect, text, text_)
+import Svg.Attributes exposing (d, dominantBaseline, fill, fillOpacity, fontFamily, fontSize, height, id, markerEnd, markerHeight, markerUnits, markerWidth, orient, refX, refY, rx, ry, stroke, strokeWidth, textAnchor, transform, width, x, x1, x2, y, y1, y2)
 import SvgMouse
 import Types exposing (..)
 
@@ -82,7 +82,7 @@ positionedText xCoord yCoord elementId textContent additionalAttributes =
          , Svg.Attributes.y (toString <| yCoord)
          , fill "black"
          , textAnchor "middle"
-         , alignmentBaseline "central"
+         , dominantBaseline "central" -- alignmentBaseline not working on FF - see https://stackoverflow.com/questions/19212498/firefox-support-for-alignment-baseline-property#answer-21373135
          , fontSize "16px"
          , fontFamily "sans-serif, monospace"
          , id elementId
