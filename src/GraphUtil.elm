@@ -1,18 +1,18 @@
 module GraphUtil
     exposing
-        ( updateDraggedNode
-        , setNodeText
-        , updateNodeLabel
-        , insertNode
-        , insertEdge
-        , removeEdge
+        ( getEdgeLabel
         , getNode
-        , getEdgeLabel
+        , insertEdge
+        , insertNode
+        , removeEdge
+        , setNodeText
+        , updateDraggedNode
+        , updateNodeLabel
         )
 
-import Graph exposing (Node, NodeContext, NodeId, Adjacency)
+import Graph exposing (Adjacency, Node, NodeContext, NodeId)
 import IntDict
-import Types exposing (EdgeLabel, EdgeLabel(..), GraphEdge, GraphNode, ModelGraph, NodeLabel, NodeText(..), Drag)
+import Types exposing (Drag, EdgeLabel(..), GraphEdge, GraphNode, ModelGraph, NodeLabel, NodeText(..))
 
 
 updateNodeInContext : (Node n -> Node n) -> NodeContext n e -> NodeContext n e
@@ -62,7 +62,7 @@ updateDraggedNodeInContext drag =
 getEdgeLabel : NodeId -> NodeId -> ModelGraph -> EdgeLabel
 getEdgeLabel from to graph =
     Graph.get from graph
-        |> Maybe.map (.outgoing)
+        |> Maybe.map .outgoing
         |> Maybe.andThen (IntDict.get to)
         |> crashIfEdgeNotInGraph from to
 
@@ -81,12 +81,12 @@ removeEdge from to gr =
                 | outgoing = IntDict.remove toId oldContext.outgoing
             }
     in
-        Graph.update from (Maybe.map (removeOutgoingEdge to)) gr
+    Graph.update from (Maybe.map (removeOutgoingEdge to)) gr
 
 
 getNode : NodeId -> ModelGraph -> GraphNode
 getNode nodeId graph =
-    Graph.get nodeId graph |> Maybe.map (.node) |> crashIfNodeNotInGraph nodeId
+    Graph.get nodeId graph |> Maybe.map .node |> crashIfNodeNotInGraph nodeId
 
 
 crashIfNodeNotInGraph : NodeId -> Maybe GraphNode -> GraphNode

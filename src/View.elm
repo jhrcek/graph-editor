@@ -1,4 +1,4 @@
-module View exposing (view, focusLabelInput)
+module View exposing (focusLabelInput, view)
 
 import Canvas
 import Dom
@@ -51,11 +51,11 @@ viewCanvas editorMode graph maybeDrag winSize =
                         ]
                    ]
     in
-        Svg.svg svgElemAttributes <|
-            if Graph.isEmpty graph then
-                [ Canvas.positionedText (winSize.width // 2) (winSize.height // 2) "emptyGraphText" "Click anywhere to create first node" [ fill "grey" ] ]
-            else
-                nonEmptyGraphView editorMode maybeDrag graph
+    Svg.svg svgElemAttributes <|
+        if Graph.isEmpty graph then
+            [ Canvas.positionedText (winSize.width // 2) (winSize.height // 2) "emptyGraphText" "Click anywhere to create first node" [ fill "grey" ] ]
+        else
+            nonEmptyGraphView editorMode maybeDrag graph
 
 
 nonEmptyGraphView : EditorMode -> Maybe Drag -> ModelGraph -> List (Svg Msg)
@@ -70,7 +70,7 @@ nonEmptyGraphView editorMode maybeDrag graph =
         edgeBeingCreated =
             getEdgeBeingCreated editorMode graph
     in
-        Canvas.svgDefs :: edgeBeingCreated :: edgesView ++ nodesView
+    Canvas.svgDefs :: edgeBeingCreated :: edgesView ++ nodesView
 
 
 getEdgeBeingCreated : EditorMode -> ModelGraph -> Svg Msg
@@ -81,7 +81,7 @@ getEdgeBeingCreated editorMode graph =
                 fromNode =
                     GraphUtil.getNode nodeId graph
             in
-                Canvas.drawEdge fromNode.label mousePosition.x mousePosition.y "edgeTextIdNotNeeded" dummyEdge []
+            Canvas.drawEdge fromNode.label mousePosition.x mousePosition.y "edgeTextIdNotNeeded" dummyEdge []
 
         _ ->
             Svg.text ""
@@ -98,7 +98,7 @@ viewNode mDrag editorMode node =
         nodeMaybeAffectedByDrag =
             applyDrag mDrag node
     in
-        Canvas.boxedText nodeMaybeAffectedByDrag editorMode
+    Canvas.boxedText nodeMaybeAffectedByDrag editorMode
 
 
 viewEdge : ModelGraph -> Maybe Drag -> EditorMode -> GraphEdge -> Html Msg
@@ -110,7 +110,7 @@ viewEdge graph mDrag editorMode edge =
         toNode =
             GraphUtil.getNode edge.to graph |> applyDrag mDrag
     in
-        Canvas.edgeArrow edge fromNode toNode editorMode
+    Canvas.edgeArrow edge fromNode toNode editorMode
 
 
 applyDrag : Maybe Drag -> GraphNode -> GraphNode
@@ -150,9 +150,9 @@ nodeForm : GraphNode -> Html Msg
 nodeForm { id, label } =
     let
         currentText =
-            (nodeTextToString label.nodeText)
+            nodeTextToString label.nodeText
     in
-        labelForm NodeLabelEdit NodeLabelEditConfirm "Node text" currentText label.x label.y
+    labelForm NodeLabelEdit NodeLabelEditConfirm "Node text" currentText label.x label.y
 
 
 edgeForm : GraphEdge -> ModelGraph -> Html Msg
@@ -170,11 +170,11 @@ edgeForm ({ from, to, label } as edge) graph =
                 toNodeLabel =
                     GraphUtil.getNode to graph |> .label
             in
-                ( (fromNodeLabel.x + toNodeLabel.x) // 2
-                , (fromNodeLabel.y + toNodeLabel.y) // 2
-                )
+            ( (fromNodeLabel.x + toNodeLabel.x) // 2
+            , (fromNodeLabel.y + toNodeLabel.y) // 2
+            )
     in
-        labelForm EdgeLabelEdit EdgeLabelEditConfirm "Edge text" currentText formX formY
+    labelForm EdgeLabelEdit EdgeLabelEditConfirm "Edge text" currentText formX formY
 
 
 
@@ -222,8 +222,8 @@ modeButton isActive modeText mode =
             else
                 "btn btn-secondary"
     in
-        button [ type_ "button", class btnClass, onClick (SetMode mode) ]
-            [ text modeText ]
+    button [ type_ "button", class btnClass, onClick (SetMode mode) ]
+        [ text modeText ]
 
 
 helpAndAboutButtons : Html Msg
@@ -288,9 +288,9 @@ aboutContent =
     Markdown.toHtml [] """
 **Elm Graph Editor** version 1.0.0
 
-Implemented in [Elm](http://elm-lang.org/)
-
 Created by [Jan Hrček](http://janhrcek.cz)
+
+Implemented in [Elm](http://elm-lang.org/)
 
 Source code available on [GitHub](https://github.com/jhrcek/graph-editor)
     """

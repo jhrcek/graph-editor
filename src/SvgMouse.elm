@@ -1,10 +1,10 @@
 module SvgMouse
     exposing
         ( onCanvasMouseDown
+        , onClickStopPropagation
+        , onDoubleClickStopPropagation
         , onMouseDownGetPosition
         , onMouseDownStopPropagation
-        , onDoubleClickStopPropagation
-        , onClickStopPropagation
         , onMouseUp
         , onMouseUpUnselectStartNode
         )
@@ -13,8 +13,8 @@ import Html exposing (Attribute)
 import Html.Events exposing (Options, defaultOptions, on, onWithOptions)
 import Json.Decode as Json exposing (field, int)
 import Mouse exposing (Position)
-import Types exposing (Msg(..))
 import Svg.Events
+import Types exposing (Msg(..))
 
 
 {- The aim of this module is to work around the fact, that click events fired

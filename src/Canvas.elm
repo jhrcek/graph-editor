@@ -1,4 +1,4 @@
-module Canvas exposing (boxedText, edgeArrow, drawEdge, svgDefs, positionedText)
+module Canvas exposing (boxedText, drawEdge, edgeArrow, positionedText, svgDefs)
 
 import Graph exposing (NodeId)
 import Html.Attributes exposing (style)
@@ -41,9 +41,9 @@ boxedText ({ id, label } as node) editorMode =
                                     else
                                         SvgMouse.onMouseUpUnselectStartNode
                             in
-                                [ edgeCreationEvent
-                                , onDoubleClickStartNodeLabelEdit node
-                                ]
+                            [ edgeCreationEvent
+                            , onDoubleClickStartNodeLabelEdit node
+                            ]
 
                         EditingNodeLabel _ ->
                             [ onDoubleClickStartNodeLabelEdit node ]
@@ -57,22 +57,22 @@ boxedText ({ id, label } as node) editorMode =
         nodeTextId =
             toString id
     in
-        g
-            [ transform tranformValue ]
-            [ rect
-                ([ width (toString boxWidth)
-                 , height (toString boxHeight)
-                 , rx "4"
-                 , ry "4"
-                 , stroke "black"
-                 , strokeWidth "1"
-                 , fill "white"
-                 ]
-                    ++ modeDependentAttributes
-                )
-                []
-            , positionedText boxCenterX boxCenterY nodeTextId (nodeTextToString label.nodeText) modeDependentAttributes
-            ]
+    g
+        [ transform tranformValue ]
+        [ rect
+            ([ width (toString boxWidth)
+             , height (toString boxHeight)
+             , rx "4"
+             , ry "4"
+             , stroke "black"
+             , strokeWidth "1"
+             , fill "white"
+             ]
+                ++ modeDependentAttributes
+            )
+            []
+        , positionedText boxCenterX boxCenterY nodeTextId (nodeTextToString label.nodeText) modeDependentAttributes
+        ]
 
 
 positionedText : Int -> Int -> String -> String -> List (Svg.Attribute Msg) -> Svg Msg
@@ -135,18 +135,18 @@ edgeArrow edge fromNode toNode editorMode =
                 xCorrection =
                     round (toFloat (boxHeight // 2) / tan edgeIncomingAngle)
             in
-                case whichSideOfTargetBoxToPointTo of
-                    BRight ->
-                        ( x + boxWidth // 2, y - yCorrection )
+            case whichSideOfTargetBoxToPointTo of
+                BRight ->
+                    ( x + boxWidth // 2, y - yCorrection )
 
-                    BLeft ->
-                        ( x - boxWidth // 2, y + yCorrection )
+                BLeft ->
+                    ( x - boxWidth // 2, y + yCorrection )
 
-                    BTop ->
-                        ( x + xCorrection, y - boxHeight // 2 )
+                BTop ->
+                    ( x + xCorrection, y - boxHeight // 2 )
 
-                    BBottom ->
-                        ( x - xCorrection, y + boxHeight // 2 )
+                BBottom ->
+                    ( x - xCorrection, y + boxHeight // 2 )
 
         modeDependentAttributes =
             case editorMode of
@@ -162,7 +162,7 @@ edgeArrow edge fromNode toNode editorMode =
         edgeTextId =
             toString fromNode.id ++ ":" ++ toString toNode.id
     in
-        drawEdge fromNode.label arrowHeadX arrowHeadY edgeTextId edge modeDependentAttributes
+    drawEdge fromNode.label arrowHeadX arrowHeadY edgeTextId edge modeDependentAttributes
 
 
 drawEdge : NodeLabel -> Int -> Int -> String -> GraphEdge -> List (Svg.Attribute Msg) -> Svg Msg
@@ -202,12 +202,12 @@ drawEdge fromLabel xTo yTo edgeTextId edge attrList =
                         )
                         []
     in
-        g attrList
-            [ Svg.line (coordAttrs ++ [ stroke "transparent", strokeWidth "6" ]) []
-            , Svg.line (coordAttrs ++ [ stroke "black", strokeWidth "1", markerEnd "url(#arrow)" ]) []
-            , backgroundRect attrList
-            , positionedText edgeCenterX edgeCenterY edgeTextId edgeText attrList
-            ]
+    g attrList
+        [ Svg.line (coordAttrs ++ [ stroke "transparent", strokeWidth "6" ]) []
+        , Svg.line (coordAttrs ++ [ stroke "black", strokeWidth "1", markerEnd "url(#arrow)" ]) []
+        , backgroundRect attrList
+        , positionedText edgeCenterX edgeCenterY edgeTextId edgeText attrList
+        ]
 
 
 svgDefs : Svg Msg

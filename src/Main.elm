@@ -4,8 +4,8 @@ import Graph exposing (Edge, Graph, NodeContext, NodeId)
 import GraphUtil
 import Html exposing (Html)
 import Mouse exposing (Position)
-import Task
 import Ports
+import Task
 import Types exposing (..)
 import View
 import Window
@@ -41,11 +41,11 @@ update msg model =
                 newNode =
                     makeNode model.newNodeId x y ""
             in
-                { model
-                    | graph = GraphUtil.insertNode newNode model.graph
-                    , newNodeId = model.newNodeId + 1
-                }
-                    ! [ Ports.requestNodeTextBoundingBox model.newNodeId ]
+            { model
+                | graph = GraphUtil.insertNode newNode model.graph
+                , newNodeId = model.newNodeId + 1
+            }
+                ! [ Ports.requestNodeTextBoundingBox model.newNodeId ]
 
         NodeDrag dragMsg ->
             processDragMsg dragMsg model
@@ -63,7 +63,7 @@ update msg model =
                         _ ->
                             model.editorMode
             in
-                { model | editorMode = newEditorMode } ! []
+            { model | editorMode = newEditorMode } ! []
 
         NodeLabelEditConfirm ->
             let
@@ -77,7 +77,7 @@ update msg model =
                         _ ->
                             ( model.graph, Cmd.none )
             in
-                { model | graph = newGraph, editorMode = EditMode EditingNothing } ! [ command ]
+            { model | graph = newGraph, editorMode = EditMode EditingNothing } ! [ command ]
 
         EdgeLabelEditStart edge ->
             { model | editorMode = EditMode (EditingEdgeLabel edge) } ! [ View.focusLabelInput ]
@@ -92,7 +92,7 @@ update msg model =
                         _ ->
                             model.editorMode
             in
-                { model | editorMode = newEditorMode } ! []
+            { model | editorMode = newEditorMode } ! []
 
         EdgeLabelEditConfirm ->
             let
@@ -104,14 +104,14 @@ update msg model =
                         _ ->
                             ( model.graph, Cmd.none )
             in
-                { model | graph = newGraph, editorMode = EditMode EditingNothing } ! [ command ]
+            { model | graph = newGraph, editorMode = EditMode EditingNothing } ! [ command ]
 
         StartNodeOfEdgeSelected nodeId ->
             let
                 selectedNodeLabel =
                     GraphUtil.getNode nodeId model.graph |> .label
             in
-                { model | editorMode = EditMode (CreatingEdge nodeId { x = selectedNodeLabel.x, y = selectedNodeLabel.y }) } ! []
+            { model | editorMode = EditMode (CreatingEdge nodeId { x = selectedNodeLabel.x, y = selectedNodeLabel.y }) } ! []
 
         EndNodeOfEdgeSelected endNodeId ->
             let
@@ -125,7 +125,7 @@ update msg model =
                         _ ->
                             ( model.graph, Cmd.none )
             in
-                { model | graph = newGraph, editorMode = EditMode EditingNothing } ! [ command ]
+            { model | graph = newGraph, editorMode = EditMode EditingNothing } ! [ command ]
 
         UnselectStartNodeOfEdge ->
             { model | editorMode = EditMode EditingNothing } ! []
@@ -145,7 +145,7 @@ update msg model =
                     else
                         model.editorMode
             in
-                { model | graph = newGraph, editorMode = newEditorMode } ! []
+            { model | graph = newGraph, editorMode = newEditorMode } ! []
 
         DeleteEdge fromId toId ->
             { model | graph = GraphUtil.removeEdge fromId toId model.graph } ! []
@@ -179,7 +179,7 @@ updateBoundingBox bbox graph =
                         (NodeText _ text) =
                             GraphUtil.getNode nodeId graph |> .label |> .nodeText
                     in
-                        GraphUtil.updateNodeLabel nodeId (NodeText (Just bbox) text) graph
+                    GraphUtil.updateNodeLabel nodeId (NodeText (Just bbox) text) graph
 
                 Err er ->
                     Debug.crash <| "Failed to parse node id from " ++ bbox.elementId
@@ -191,7 +191,7 @@ updateBoundingBox bbox graph =
                         (EdgeLabel _ text) =
                             GraphUtil.getEdgeLabel fromId toId graph
                     in
-                        GraphUtil.insertEdge { from = fromId, to = toId, label = (EdgeLabel (Just bbox) text) } graph
+                    GraphUtil.insertEdge { from = fromId, to = toId, label = EdgeLabel (Just bbox) text } graph
 
                 _ ->
                     Debug.crash <| "Failed to parse edge endpoint ids from " ++ bbox.elementId
@@ -211,7 +211,7 @@ setMousePositionIfCreatingEdge mousePosition model =
                 _ ->
                     model.editorMode
     in
-        { model | editorMode = newEditorMode }
+    { model | editorMode = newEditorMode }
 
 
 processDragMsg : DragMsg -> Model -> ( Model, Cmd Msg )
@@ -236,7 +236,7 @@ processDragMsg msg model =
                         model.draggedNode
                         |> Maybe.withDefault ( model.graph, Cmd.none )
             in
-                { model | graph = newGraph, draggedNode = Nothing } ! [ command ]
+            { model | graph = newGraph, draggedNode = Nothing } ! [ command ]
 
 
 makeNode : NodeId -> Int -> Int -> String -> GraphNode

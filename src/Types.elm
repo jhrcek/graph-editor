@@ -1,27 +1,27 @@
 module Types
     exposing
-        ( Model
-        , ModelGraph
-        , GraphNode
-        , GraphEdge
-        , Msg(..)
+        ( BBox
+        , Drag
         , DragMsg(..)
+        , EdgeLabel(..)
+        , EditState(..)
+        , EditorMode(..)
+        , GraphEdge
+        , GraphNode
+        , Model
+        , ModelGraph
+        , Msg(..)
         , NodeLabel
         , NodeText(..)
-        , EdgeLabel(..)
+        , getDraggedNodePosition
+        , isEditMode
         , nodeTextToString
         , setEdgeText
-        , Drag
-        , EditorMode(..)
-        , isEditMode
-        , EditState(..)
-        , getDraggedNodePosition
-        , BBox
         )
 
-import Window
+import Graph exposing (Edge, Graph, NodeId)
 import Mouse exposing (Position)
-import Graph exposing (NodeId, Graph, Edge)
+import Window
 
 
 type alias Model =

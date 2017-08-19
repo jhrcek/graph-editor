@@ -1,15 +1,15 @@
 port module Ports
     exposing
-        ( setBoundingBox
-        , requestNodeTextBoundingBox
-        , requestEdgeTextBoundingBox
+        ( requestBoundingBoxesForContext
         , requestBoundingBoxesForEverything
-        , requestBoundingBoxesForContext
+        , requestEdgeTextBoundingBox
+        , requestNodeTextBoundingBox
+        , setBoundingBox
         )
 
 import Graph exposing (NodeContext, NodeId)
-import Types exposing (BBox, ModelGraph, Msg, NodeLabel, EdgeLabel)
 import IntDict
+import Types exposing (BBox, EdgeLabel, ModelGraph, Msg, NodeLabel)
 
 
 requestNodeTextBoundingBox : NodeId -> Cmd msg
@@ -35,7 +35,7 @@ requestBoundingBoxesForEverything graph =
                 |> List.map (\e -> requestEdgeTextBoundingBox e.from e.to)
                 |> Cmd.batch
     in
-        Cmd.batch [ nodeBbReqs, edgeBbReqs ]
+    Cmd.batch [ nodeBbReqs, edgeBbReqs ]
 
 
 requestBoundingBoxesForContext : Maybe (NodeContext NodeLabel EdgeLabel) -> Cmd Msg
@@ -50,11 +50,11 @@ requestBoundingBoxesForContextHelper ctx =
         nodeId =
             ctx.node.id
     in
-        Cmd.batch
-            [ requestNodeTextBoundingBox nodeId
-            , IntDict.keys ctx.outgoing |> List.map (\to -> requestEdgeTextBoundingBox nodeId to) |> Cmd.batch
-            , IntDict.keys ctx.incoming |> List.map (\from -> requestEdgeTextBoundingBox from nodeId) |> Cmd.batch
-            ]
+    Cmd.batch
+        [ requestNodeTextBoundingBox nodeId
+        , IntDict.keys ctx.outgoing |> List.map (\to -> requestEdgeTextBoundingBox nodeId to) |> Cmd.batch
+        , IntDict.keys ctx.incoming |> List.map (\from -> requestEdgeTextBoundingBox from nodeId) |> Cmd.batch
+        ]
 
 
 
