@@ -1,9 +1,9 @@
 module Main exposing (..)
 
-import Graph exposing (Edge, Graph, NodeContext, NodeId)
+import Graph exposing (Edge, NodeId)
 import GraphUtil
-import Html exposing (Html)
-import Mouse exposing (Position)
+import Html
+import Mouse
 import Ports
 import Task
 import Types exposing (..)
@@ -181,7 +181,7 @@ updateBoundingBox bbox graph =
                     in
                     GraphUtil.updateNodeLabel nodeId (NodeText (Just bbox) text) graph
 
-                Err er ->
+                _ ->
                     Debug.crash <| "Failed to parse node id from " ++ bbox.elementId
 
         edgeFromIdStr :: edgeToIdStr :: [] ->

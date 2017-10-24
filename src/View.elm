@@ -2,10 +2,10 @@ module View exposing (focusLabelInput, view)
 
 import Canvas
 import Dom
-import Graph exposing (Edge, NodeId)
+import Graph
 import GraphUtil
-import Html exposing (Html, a, button, div, form, h3, input, text)
-import Html.Attributes as Attr exposing (class, id, placeholder, size, style, type_, value)
+import Html exposing (Html, button, div, form, h3, input, text)
+import Html.Attributes exposing (class, id, placeholder, size, style, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Markdown
 import Svg exposing (Svg)
@@ -147,7 +147,7 @@ viewEdgeForm editorMode graph =
 
 
 nodeForm : GraphNode -> Html Msg
-nodeForm { id, label } =
+nodeForm { label } =
     let
         currentText =
             nodeTextToString label.nodeText
@@ -156,7 +156,7 @@ nodeForm { id, label } =
 
 
 edgeForm : GraphEdge -> ModelGraph -> Html Msg
-edgeForm ({ from, to, label } as edge) graph =
+edgeForm ({ from, to } as edge) graph =
     let
         (EdgeLabel _ currentText) =
             edge.label
@@ -313,4 +313,4 @@ focusLabelInput : Cmd Msg
 focusLabelInput =
     Dom.focus labelInputId
         -- focusing DOM element might fail if the element with given id is not found - ignoring this case
-        |> Task.attempt (\focusResult -> NoOp)
+        |> Task.attempt (always NoOp)

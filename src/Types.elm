@@ -19,7 +19,7 @@ module Types
         , setEdgeText
         )
 
-import Graph exposing (Edge, Graph, NodeId)
+import Graph exposing (Graph, NodeId)
 import Mouse exposing (Position)
 import Window
 
@@ -141,7 +141,7 @@ type EditState
 
 
 getDraggedNodePosition : Drag -> NodeLabel -> NodeLabel
-getDraggedNodePosition { nodeId, start, current } nodeLabel =
+getDraggedNodePosition { start, current } nodeLabel =
     { nodeLabel
         | x = nodeLabel.x + current.x - start.x
 
