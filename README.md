@@ -1,9 +1,10 @@
 # Elm graph editor
 
 Simple editor for creating graphs implemented purely in Elm.
+See it [in action](http://janhrcek.cz/graph-editor/)!
 
 # Current features
-- [x] The editor has 3 modes, each mode determines what user interactions are doing with the graph
+- [x] The editor has 3 modes, which determine what user interactions are doing with the graph
     - [x] In *Move* mode you can arrange nodes on the canvas using drag and drop.
     - [x] In *Create/Edit* mode you can
         - [x] Create new nodes by clicking on the canvas (double click to immediately start editing node text).
