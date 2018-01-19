@@ -13,11 +13,10 @@ See it [in action](http://janhrcek.cz/graph-editor/)!
         - [x] Edit edge text by double clicking edges. Enter confirms the edit.
     - [x] In *Delete* mode you can remove nodes and edges by clicking them.
 - [x] Help button that shows/hides info about how users can create/edit graphs
+- [x] Export graph data to [TGF](https://en.wikipedia.org/wiki/Trivial_Graph_Format)
 
 # Upcoming Features
-- [ ] Visualize / Export edited graph data in different formats
-    - [ ] [TGF](https://en.wikipedia.org/wiki/Trivial_Graph_Format)
-    - [ ] [DOT](https://en.wikipedia.org/wiki/DOT_(graph_description_language))
+- [ ] Visualize / Export edited graph data in the [DOT](https://en.wikipedia.org/wiki/DOT_(graph_description_language)) format
 - [ ] Automatic layout of graph using force directed layout algorithm
 - [ ] Ability to save / load multiple graphs in local storage
 

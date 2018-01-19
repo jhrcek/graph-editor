@@ -73,6 +73,7 @@ type Msg
     | ToggleAbout Bool
     | WindowResized Window.Size
     | NoOp
+    | ExportTGF
 
 
 type DragMsg

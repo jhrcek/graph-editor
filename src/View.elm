@@ -229,7 +229,8 @@ modeButton isActive modeText mode =
 helpAndAboutButtons : Html Msg
 helpAndAboutButtons =
     div [ class "btn-group m-2", style [ ( "position", "absolute" ), ( "right", "0px" ) ] ]
-        [ button [ type_ "button", class "btn btn-secondary", onClick (ToggleHelp True) ] [ text "Help" ]
+        [ button [ type_ "button", class "btn btn-secondary", onClick ExportTGF ] [ text "Export TGF" ]
+        , button [ type_ "button", class "btn btn-secondary", onClick (ToggleHelp True) ] [ text "Help" ]
         , button [ type_ "button", class "btn btn-secondary", onClick (ToggleAbout True) ] [ text "About" ]
         ]
 
