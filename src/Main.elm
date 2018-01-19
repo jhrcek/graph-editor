@@ -1,5 +1,6 @@
 module Main exposing (..)
 
+import Export
 import Graph exposing (Edge, NodeId)
 import GraphUtil
 import Html
@@ -164,6 +165,14 @@ update msg model =
 
         WindowResized sz ->
             { model | windowSize = sz } ! []
+
+        ExportTGF ->
+            model
+                ! [ Ports.download
+                        { filename = "graph.tgf"
+                        , data = Export.toTGF model.graph
+                        }
+                  ]
 
         NoOp ->
             model ! []

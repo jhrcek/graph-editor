@@ -1,6 +1,7 @@
 port module Ports
     exposing
-        ( requestBoundingBoxesForContext
+        ( download
+        , requestBoundingBoxesForContext
         , requestBoundingBoxesForEverything
         , requestEdgeTextBoundingBox
         , requestNodeTextBoundingBox
@@ -69,3 +70,6 @@ port requestBoundingBox : String -> Cmd msg
 
 
 port setBoundingBox : (BBox -> msg) -> Sub msg
+
+
+port download : { filename : String, data : String } -> Cmd msg
