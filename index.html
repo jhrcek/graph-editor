@@ -1,0 +1,45 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Elm Graph Editor</title>
+  <link rel="stylesheet" href="bootstrap.min.css">
+</head>
+
+<body>
+  <script src="app.js"></script>
+  <script>
+    var app = Elm.Main.fullscreen();
+
+    /* Port for determining Bounding Box of SVG element with given ID
+     * BBox is used to determine exact size of rectangle drawn around the text
+     */
+    app.ports.requestBoundingBox.subscribe(function(idOfSvgText) {
+      requestAnimationFrame(function() {
+        var text = document.getElementById(idOfSvgText);
+        var bbox = text.getBBox();
+        bbox.elementId = idOfSvgText;
+        app.ports.setBoundingBox.send(bbox);
+      })
+    });
+
+    app.ports.download.subscribe(function(msg) {
+        /* taken from https://stackoverflow.com/a/33542499/403702 */
+        var blob = new Blob([msg.data], {type: 'text/plain'});
+        if(window.navigator.msSaveOrOpenBlob) {
+            window.navigator.msSaveBlob(blob, msg.filename);
+        } else {
+            var elem = window.document.createElement('a');
+            elem.href = window.URL.createObjectURL(blob);
+            elem.download = msg.filename;
+            document.body.appendChild(elem);
+            elem.click();
+            document.body.removeChild(elem);
+        }
+    });
+  </script>
+</body>
+
+</html>
