@@ -16,6 +16,8 @@ module Types
         , getDraggedNodePosition
         , isEditMode
         , nodeTextToString
+        , setBBoxOfEdgeLabel
+        , setBBoxOfNodeText
         , setEdgeText
         )
 
@@ -100,6 +102,11 @@ type NodeText
     = NodeText (Maybe BBox) String
 
 
+setBBoxOfNodeText : BBox -> NodeText -> NodeText
+setBBoxOfNodeText bbox (NodeText _ text) =
+    NodeText (Just bbox) text
+
+
 nodeTextToString : NodeText -> String
 nodeTextToString (NodeText _ string) =
     string
@@ -107,6 +114,11 @@ nodeTextToString (NodeText _ string) =
 
 type EdgeLabel
     = EdgeLabel (Maybe BBox) String
+
+
+setBBoxOfEdgeLabel : BBox -> EdgeLabel -> EdgeLabel
+setBBoxOfEdgeLabel bbox (EdgeLabel _ text) =
+    EdgeLabel (Just bbox) text
 
 
 setEdgeText : String -> EdgeLabel -> EdgeLabel

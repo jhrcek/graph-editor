@@ -1,10 +1,10 @@
 module GraphUtil
     exposing
-        ( getEdgeLabel
-        , getNode
+        ( getNode
         , insertEdge
         , insertNode
         , removeEdge
+        , setBoundingBox
         , setNodeText
         , updateDraggedNode
         , updateNodeLabel
@@ -12,7 +12,7 @@ module GraphUtil
 
 import Graph exposing (Adjacency, Node, NodeContext, NodeId)
 import IntDict
-import Types exposing (Drag, EdgeLabel(..), GraphEdge, GraphNode, ModelGraph, NodeLabel, NodeText(..))
+import Types exposing (BBox, Drag, EdgeLabel(..), GraphEdge, GraphNode, ModelGraph, NodeLabel, NodeText(..), setBBoxOfEdgeLabel, setBBoxOfNodeText)
 
 
 updateNodeInContext : (Node n -> Node n) -> NodeContext n e -> NodeContext n e
@@ -33,6 +33,11 @@ updateLabelInNode labelUpdater node =
 setNodeText : NodeText -> GraphNode -> GraphNode
 setNodeText newText node =
     updateLabelInNode (\label -> { label | nodeText = newText }) node
+
+
+updateNodeTextInLabel : (NodeText -> NodeText) -> NodeLabel -> NodeLabel
+updateNodeTextInLabel f nodeLabel =
+    { nodeLabel | nodeText = f nodeLabel.nodeText }
 
 
 insertNode : GraphNode -> ModelGraph -> ModelGraph
@@ -57,14 +62,6 @@ updateDraggedNode drag graph =
 updateDraggedNodeInContext : Drag -> Maybe (NodeContext NodeLabel e) -> Maybe (NodeContext NodeLabel e)
 updateDraggedNodeInContext drag =
     Maybe.map (updateNodeInContext (updateLabelInNode (Types.getDraggedNodePosition drag)))
-
-
-getEdgeLabel : NodeId -> NodeId -> ModelGraph -> EdgeLabel
-getEdgeLabel from to graph =
-    Graph.get from graph
-        |> Maybe.map .outgoing
-        |> Maybe.andThen (IntDict.get to)
-        |> crashIfEdgeNotInGraph from to
 
 
 insertEdge : GraphEdge -> ModelGraph -> ModelGraph
@@ -99,11 +96,30 @@ crashIfNodeNotInGraph nodeId mGraphNode =
             node
 
 
-crashIfEdgeNotInGraph : NodeId -> NodeId -> Maybe EdgeLabel -> EdgeLabel
-crashIfEdgeNotInGraph from to mEdgeLabel =
-    case mEdgeLabel of
-        Nothing ->
-            Debug.crash <| "Edge between nodes " ++ toString from ++ " and " ++ toString to ++ " was not in the graph"
+setBoundingBox : BBox -> ModelGraph -> ModelGraph
+setBoundingBox bbox graph =
+    case String.split ":" bbox.elementId of
+        [ nodeIdString ] ->
+            String.toInt nodeIdString
+                |> Result.map (\nodeId -> setNodeBoundingBox nodeId bbox graph)
+                |> Result.withDefault graph
 
-        Just edgeLabel ->
-            edgeLabel
+        [ edgeFromIdStr, edgeToIdStr ] ->
+            Result.map2 (,) (String.toInt edgeFromIdStr) (String.toInt edgeToIdStr)
+                |> Result.map (\( fromId, toId ) -> setEdgeBoundingBox fromId toId bbox graph)
+                |> Result.withDefault graph
+
+        _ ->
+            graph
+
+
+setNodeBoundingBox : NodeId -> BBox -> ModelGraph -> ModelGraph
+setNodeBoundingBox nodeId bbox =
+    Graph.update nodeId
+        (Maybe.map <| updateNodeInContext <| updateLabelInNode <| updateNodeTextInLabel <| setBBoxOfNodeText bbox)
+
+
+setEdgeBoundingBox : NodeId -> NodeId -> BBox -> ModelGraph -> ModelGraph
+setEdgeBoundingBox fromId toId bbox =
+    Graph.update fromId
+        (Maybe.map <| updateOutgoingAdjacency <| IntDict.update toId <| Maybe.map <| setBBoxOfEdgeLabel bbox)

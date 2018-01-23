@@ -1,7 +1,7 @@
-module Main exposing (..)
+module Main exposing (main)
 
 import Export
-import Graph exposing (Edge, NodeId)
+import Graph exposing (NodeId)
 import GraphUtil
 import Html
 import Mouse
@@ -155,7 +155,7 @@ update msg model =
             { model | editorMode = mode } ! []
 
         SetBoundingBox bbox ->
-            { model | graph = updateBoundingBox bbox model.graph } ! []
+            { model | graph = GraphUtil.setBoundingBox bbox model.graph } ! []
 
         ToggleHelp flag ->
             { model | helpEnabled = flag } ! []
@@ -176,37 +176,6 @@ update msg model =
 
         NoOp ->
             model ! []
-
-
-updateBoundingBox : BBox -> ModelGraph -> ModelGraph
-updateBoundingBox bbox graph =
-    case String.split ":" bbox.elementId of
-        nodeIdString :: [] ->
-            case String.toInt nodeIdString of
-                Ok nodeId ->
-                    let
-                        (NodeText _ text) =
-                            GraphUtil.getNode nodeId graph |> .label |> .nodeText
-                    in
-                    GraphUtil.updateNodeLabel nodeId (NodeText (Just bbox) text) graph
-
-                _ ->
-                    Debug.crash <| "Failed to parse node id from " ++ bbox.elementId
-
-        edgeFromIdStr :: edgeToIdStr :: [] ->
-            case Result.map2 (,) (String.toInt edgeFromIdStr) (String.toInt edgeToIdStr) of
-                Ok ( fromId, toId ) ->
-                    let
-                        (EdgeLabel _ text) =
-                            GraphUtil.getEdgeLabel fromId toId graph
-                    in
-                    GraphUtil.insertEdge { from = fromId, to = toId, label = EdgeLabel (Just bbox) text } graph
-
-                _ ->
-                    Debug.crash <| "Failed to parse edge endpoint ids from " ++ bbox.elementId
-
-        _ ->
-            graph
 
 
 setMousePositionIfCreatingEdge : Mouse.Position -> Model -> Model
@@ -261,11 +230,6 @@ makeNodeLabel x y nodeText =
     , x = x
     , y = y
     }
-
-
-makeEdge : NodeId -> NodeId -> String -> GraphEdge
-makeEdge from to lbl =
-    Edge from to (EdgeLabel Nothing lbl)
 
 
 subscriptions : Model -> Sub Msg

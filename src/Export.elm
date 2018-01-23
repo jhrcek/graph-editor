@@ -29,7 +29,7 @@ toTGF graph =
                         toString from ++ " " ++ toString to ++ " " ++ edgeLabel
                     )
     in
-    (nodes ++ [ "#" ] ++ edges)
+    (nodes ++ "#" :: edges)
         -- trimming is questionable; little info about the format exists.
         -- yEd imports it fine though.
         |> List.map String.trim
