@@ -13,6 +13,7 @@ module Types
         , Msg(..)
         , NodeLabel
         , NodeText(..)
+        , edgeLabelToString
         , getDraggedNodePosition
         , isEditMode
         , nodeTextToString
@@ -124,6 +125,11 @@ setBBoxOfEdgeLabel bbox (EdgeLabel _ text) =
 setEdgeText : String -> EdgeLabel -> EdgeLabel
 setEdgeText newText (EdgeLabel mbbox _) =
     EdgeLabel mbbox newText
+
+
+edgeLabelToString : EdgeLabel -> String
+edgeLabelToString (EdgeLabel _ string) =
+    string
 
 
 
