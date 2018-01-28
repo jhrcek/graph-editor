@@ -16,7 +16,7 @@ module Types
         , edgeLabelToString
         , getDraggedNodePosition
         , isEditMode
-        , nodeTextToString
+        , nodeLabelToString
         , setBBoxOfEdgeLabel
         , setBBoxOfNodeText
         , setEdgeText
@@ -75,8 +75,9 @@ type Msg
     | ToggleHelp Bool
     | ToggleAbout Bool
     | WindowResized Window.Size
+    | ExportTgf
+    | ExportDot
     | NoOp
-    | ExportTGF
 
 
 type DragMsg
@@ -106,6 +107,11 @@ type NodeText
 setBBoxOfNodeText : BBox -> NodeText -> NodeText
 setBBoxOfNodeText bbox (NodeText _ text) =
     NodeText (Just bbox) text
+
+
+nodeLabelToString : NodeLabel -> String
+nodeLabelToString nodeLabel =
+    nodeTextToString nodeLabel.nodeText
 
 
 nodeTextToString : NodeText -> String

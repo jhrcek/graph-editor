@@ -150,7 +150,7 @@ nodeForm : GraphNode -> Html Msg
 nodeForm { label } =
     let
         currentText =
-            nodeTextToString label.nodeText
+            nodeLabelToString label
     in
     labelForm NodeLabelEdit NodeLabelEditConfirm "Node text" currentText label.x label.y
 
@@ -229,7 +229,8 @@ modeButton isActive modeText mode =
 helpAndAboutButtons : Html Msg
 helpAndAboutButtons =
     div [ class "btn-group m-2", style [ ( "position", "absolute" ), ( "right", "0px" ) ] ]
-        [ button [ type_ "button", class "btn btn-secondary", onClick ExportTGF ] [ text "Export TGF" ]
+        [ button [ type_ "button", class "btn btn-secondary", onClick ExportTgf ] [ text "Export TGF" ]
+        , button [ type_ "button", class "btn btn-secondary", onClick ExportDot ] [ text "Export DOT" ]
         , button [ type_ "button", class "btn btn-secondary", onClick (ToggleHelp True) ] [ text "Help" ]
         , button [ type_ "button", class "btn btn-secondary", onClick (ToggleAbout True) ] [ text "About" ]
         ]

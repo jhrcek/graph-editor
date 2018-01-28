@@ -71,7 +71,7 @@ boxedText ({ id, label } as node) editorMode =
                 ++ modeDependentAttributes
             )
             []
-        , positionedText boxCenterX boxCenterY nodeTextId (nodeTextToString label.nodeText) modeDependentAttributes
+        , positionedText boxCenterX boxCenterY nodeTextId (nodeLabelToString label) modeDependentAttributes
         ]
 
 

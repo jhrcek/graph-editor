@@ -71,7 +71,7 @@ update msg model =
                 ( newGraph, command ) =
                     case model.editorMode of
                         EditMode (EditingNodeLabel node) ->
-                            ( GraphUtil.updateNodeLabel node.id (NodeText Nothing (nodeTextToString node.label.nodeText)) model.graph
+                            ( GraphUtil.updateNodeLabel node.id (NodeText Nothing (nodeLabelToString node.label)) model.graph
                             , Graph.get node.id model.graph |> Ports.requestBoundingBoxesForContext
                             )
 
@@ -166,11 +166,19 @@ update msg model =
         WindowResized sz ->
             { model | windowSize = sz } ! []
 
-        ExportTGF ->
+        ExportTgf ->
             model
                 ! [ Ports.download
                         { filename = "graph.tgf"
-                        , data = Export.toTGF model.graph
+                        , data = Export.toTgf model.graph
+                        }
+                  ]
+
+        ExportDot ->
+            model
+                ! [ Ports.download
+                        { filename = "graph.gv"
+                        , data = Export.toDot model.graph
                         }
                   ]
 
