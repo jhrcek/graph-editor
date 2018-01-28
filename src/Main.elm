@@ -7,7 +7,7 @@ import Html
 import Mouse
 import Ports
 import Task
-import Types exposing (..)
+import Types exposing (Drag, DragMsg(..), EdgeLabel(..), EditState(..), EditorMode(..), GraphNode, Model, ModelGraph, Msg(..), NodeLabel, NodeText(..), nodeLabelToString, setEdgeText)
 import View
 import Window
 

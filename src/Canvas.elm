@@ -3,9 +3,9 @@ module Canvas exposing (boxedText, drawEdge, edgeArrow, positionedText, svgDefs)
 import Graph exposing (NodeId)
 import Html.Attributes exposing (style)
 import Svg exposing (Svg, g, rect, text, text_)
-import Svg.Attributes exposing (d, dominantBaseline, fill, fillOpacity, fontFamily, fontSize, height, id, markerEnd, markerHeight, markerUnits, markerWidth, orient, refX, refY, rx, ry, stroke, strokeWidth, textAnchor, transform, width, x, x1, x2, y, y1, y2)
+import Svg.Attributes as Sattr exposing (d, dominantBaseline, fill, fillOpacity, fontFamily, fontSize, height, markerEnd, markerHeight, markerUnits, markerWidth, orient, refX, refY, rx, ry, stroke, strokeWidth, textAnchor, transform, width, x1, x2, y1, y2)
 import SvgMouse
-import Types exposing (..)
+import Types exposing (DragMsg(DragStart), EdgeLabel(EdgeLabel), EditState(..), EditorMode(..), GraphEdge, GraphNode, Msg(..), NodeLabel, NodeText(..), nodeLabelToString)
 
 
 boxedText : GraphNode -> EditorMode -> Svg Msg
@@ -78,14 +78,14 @@ boxedText ({ id, label } as node) editorMode =
 positionedText : Int -> Int -> String -> String -> List (Svg.Attribute Msg) -> Svg Msg
 positionedText xCoord yCoord elementId textContent additionalAttributes =
     text_
-        ([ Svg.Attributes.x (toString <| xCoord)
-         , Svg.Attributes.y (toString <| yCoord)
+        ([ Sattr.id elementId
+         , Sattr.x (toString <| xCoord)
+         , Sattr.y (toString <| yCoord)
          , fill "black"
          , textAnchor "middle"
          , dominantBaseline "central" -- alignmentBaseline not working on FF - see https://stackoverflow.com/questions/19212498/firefox-support-for-alignment-baseline-property#answer-21373135
          , fontSize "16px"
          , fontFamily "sans-serif, monospace"
-         , id elementId
 
          --prevent text to be selectable by click+dragging
          , style [ ( "user-select", "none" ), ( "-moz-user-select", "none" ) ]
@@ -191,10 +191,10 @@ drawEdge fromLabel xTo yTo edgeTextId edge attrList =
 
                 Just bbox ->
                     rect
-                        ([ width (toString bbox.width)
+                        ([ Sattr.x (toString bbox.x)
+                         , Sattr.y (toString bbox.y)
+                         , width (toString bbox.width)
                          , height (toString bbox.height)
-                         , x (toString bbox.x)
-                         , y (toString bbox.y)
                          , fill "white"
                          , fillOpacity "0.8"
                          ]
@@ -219,7 +219,7 @@ svgDefs =
 -}
 arrowHeadMarkerDef : Svg a
 arrowHeadMarkerDef =
-    Svg.marker [ id "arrow", markerWidth "15", markerHeight "6", refX "15", refY "3", orient "auto", markerUnits "strokeWidth" ]
+    Svg.marker [ Sattr.id "arrow", markerWidth "15", markerHeight "6", refX "15", refY "3", orient "auto", markerUnits "strokeWidth" ]
         [ Svg.path [ d "M0,0 L0,6 L15,3 z", fill "black" ] []
         ]
 

@@ -12,7 +12,7 @@ import Svg exposing (Svg)
 import Svg.Attributes exposing (fill)
 import SvgMouse
 import Task
-import Types exposing (..)
+import Types exposing (Drag, EdgeLabel(..), EditState(..), EditorMode(..), GraphEdge, GraphNode, Model, ModelGraph, Msg(..), isEditMode, nodeLabelToString)
 import Window
 
 
