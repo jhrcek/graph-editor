@@ -2,29 +2,29 @@ module View exposing (focusLabelInput, view)
 
 import Canvas
 import Dom
+import Export
 import Graph
 import GraphUtil
-import Html exposing (Html, button, div, form, h3, input, text)
-import Html.Attributes exposing (class, id, placeholder, size, style, type_, value)
+import Html exposing (Html, button, div, form, h3, input, text, textarea)
+import Html.Attributes exposing (checked, class, id, name, placeholder, readonly, rows, size, style, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Markdown
 import Svg exposing (Svg)
 import Svg.Attributes exposing (fill)
 import SvgMouse
 import Task
-import Types exposing (Drag, EdgeLabel(..), EditState(..), EditorMode(..), GraphEdge, GraphNode, Model, ModelGraph, Msg(..), isEditMode, nodeLabelToString)
+import Types exposing (Drag, EdgeLabel(..), EditState(..), EditorMode(..), ExportFormat(..), GraphEdge, GraphNode, ModalState(..), Model, ModelGraph, Msg(..), isEditMode, nodeLabelToString)
 import Window
 
 
 view : Model -> Html Msg
-view ({ graph, draggedNode, editorMode, windowSize } as model) =
+view { graph, draggedNode, editorMode, windowSize, modalState } =
     Html.div []
         [ viewCanvas editorMode graph draggedNode windowSize
         , controlsPanel editorMode
         , viewNodeForm editorMode
         , viewEdgeForm editorMode graph
-        , helpModal model.helpEnabled
-        , aboutModal model.aboutEnabled
+        , viewModal modalState graph
         ]
 
 
@@ -229,36 +229,82 @@ modeButton isActive modeText mode =
 helpAndAboutButtons : Html Msg
 helpAndAboutButtons =
     div [ class "btn-group m-2", style [ ( "position", "absolute" ), ( "right", "0px" ) ] ]
-        [ button [ type_ "button", class "btn btn-secondary", onClick ExportTgf ] [ text "Export TGF" ]
-        , button [ type_ "button", class "btn btn-secondary", onClick ExportDot ] [ text "Export DOT" ]
-        , button [ type_ "button", class "btn btn-secondary", onClick (ToggleHelp True) ] [ text "Help" ]
-        , button [ type_ "button", class "btn btn-secondary", onClick (ToggleAbout True) ] [ text "About" ]
+        [ button [ type_ "button", class "btn btn-secondary", onClick (ModalStateChange (Export Dot)) ] [ text "Export" ]
+        , button [ type_ "button", class "btn btn-secondary", onClick (ModalStateChange Help) ] [ text "Help" ]
+        , button [ type_ "button", class "btn btn-secondary", onClick (ModalStateChange About) ] [ text "About" ]
         ]
 
 
-modalDialog : Bool -> Msg -> String -> Html Msg -> Html Msg
-modalDialog enabled closeMsg modalTitle content =
-    viewIf enabled <|
-        div []
-            [ div [ class "modal fade show", style [ ( "display", "block" ) ] ]
-                [ div [ class "modal-dialog" ]
-                    [ div [ class "modal-content" ]
-                        [ div [ class "modal-header" ]
-                            [ h3 [ class "modal-title" ] [ text modalTitle ]
-                            , button [ class "close", type_ "button", onClick closeMsg ] [ text "×" ]
-                            ]
-                        , div [ class "modal-body" ]
-                            [ content ]
+viewModal : ModalState -> ModelGraph -> Html Msg
+viewModal modalState graph =
+    case modalState of
+        Hidden ->
+            text ""
+
+        Help ->
+            modal "Help" helpContent
+
+        About ->
+            modal "About" aboutContent
+
+        Export exportFormat ->
+            modal "Export" <| exportModalBody exportFormat graph
+
+
+modal : String -> Html Msg -> Html Msg
+modal title body =
+    div []
+        [ div [ class "modal fade show", style [ ( "display", "block" ) ] ]
+            [ div [ class "modal-dialog" ]
+                [ div [ class "modal-content" ]
+                    [ div [ class "modal-header" ]
+                        [ h3 [ class "modal-title" ] [ text title ]
+                        , button [ class "close", type_ "button", onClick (ModalStateChange Hidden) ] [ text "×" ]
                         ]
+                    , div [ class "modal-body" ]
+                        [ body ]
                     ]
                 ]
-            , div [ class "modal-backdrop fade show" ] []
             ]
+        , div [ class "modal-backdrop fade show" ] []
+        ]
 
 
-helpModal : Bool -> Html Msg
-helpModal helpEnabled =
-    modalDialog helpEnabled (ToggleHelp False) "Help" helpContent
+exportModalBody : ExportFormat -> ModelGraph -> Html Msg
+exportModalBody currentFormat graph =
+    let
+        exportPreview =
+            case currentFormat of
+                Tgf ->
+                    Export.toTgf graph
+
+                Dot ->
+                    Export.toDot graph
+    in
+    div []
+        [ div []
+            [ text "Format"
+            , formatRadio currentFormat Dot
+            , formatRadio currentFormat Tgf
+            ]
+        , div [] [ textarea [ style [ ( "width", "100%" ) ], readonly True, rows 15 ] [ text exportPreview ] ]
+        , div [] [ button [ class "btn btn-primary float-right", onClick (Download currentFormat) ] [ text "Download" ] ]
+        ]
+
+
+formatRadio : ExportFormat -> ExportFormat -> Html Msg
+formatRadio currentFormat desiredFormat =
+    Html.label []
+        [ input
+            [ type_ "radio"
+            , name "exportFormat"
+            , checked (currentFormat == desiredFormat)
+            , onClick (ModalStateChange (Export desiredFormat))
+            , class "mx-1"
+            ]
+            []
+        , text <| toString desiredFormat
+        ]
 
 
 helpContent : Html a
@@ -280,11 +326,6 @@ In **Delete** mode you can remove nodes and edges from the graph by just clickin
   """
 
 
-aboutModal : Bool -> Html Msg
-aboutModal aboutEnabled =
-    modalDialog aboutEnabled (ToggleAbout False) "About" aboutContent
-
-
 aboutContent : Html a
 aboutContent =
     Markdown.toHtml [] """
@@ -296,14 +337,6 @@ Implemented in [Elm](http://elm-lang.org/)
 
 Source code available on [GitHub](https://github.com/jhrcek/graph-editor)
     """
-
-
-viewIf : Bool -> Html Msg -> Html Msg
-viewIf flag view =
-    if flag then
-        view
-    else
-        Html.text ""
 
 
 labelInputId : String

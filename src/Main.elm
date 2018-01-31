@@ -7,7 +7,7 @@ import Html
 import Mouse
 import Ports
 import Task
-import Types exposing (Drag, DragMsg(..), EdgeLabel(..), EditState(..), EditorMode(..), GraphNode, Model, ModelGraph, Msg(..), NodeLabel, NodeText(..), nodeLabelToString, setEdgeText)
+import Types exposing (Drag, DragMsg(..), EdgeLabel(..), EditState(..), EditorMode(..), GraphNode, ModalState(..), Model, ModelGraph, Msg(..), NodeLabel, NodeText(..), nodeLabelToString, setEdgeText)
 import View
 import Window
 
@@ -23,8 +23,7 @@ init =
       , newNodeId = Graph.size initialGraph
       , draggedNode = Nothing
       , editorMode = EditMode EditingNothing
-      , helpEnabled = False
-      , aboutEnabled = False
+      , modalState = Hidden
       , windowSize = { width = 800, height = 600 }
       }
     , Cmd.batch
@@ -157,28 +156,26 @@ update msg model =
         SetBoundingBox bbox ->
             { model | graph = GraphUtil.setBoundingBox bbox model.graph } ! []
 
-        ToggleHelp flag ->
-            { model | helpEnabled = flag } ! []
-
-        ToggleAbout flag ->
-            { model | aboutEnabled = flag } ! []
+        ModalStateChange newModalState ->
+            { model | modalState = newModalState } ! []
 
         WindowResized sz ->
             { model | windowSize = sz } ! []
 
-        ExportTgf ->
-            model
-                ! [ Ports.download
-                        { filename = "graph.tgf"
-                        , data = Export.toTgf model.graph
-                        }
-                  ]
+        Download exportFormat ->
+            let
+                ( fileExtension, graphToString ) =
+                    case exportFormat of
+                        Types.Dot ->
+                            ( "gv", Export.toDot )
 
-        ExportDot ->
+                        Types.Tgf ->
+                            ( "tgf", Export.toTgf )
+            in
             model
                 ! [ Ports.download
-                        { filename = "graph.gv"
-                        , data = Export.toDot model.graph
+                        { filename = "graph." ++ fileExtension
+                        , data = graphToString model.graph
                         }
                   ]
 

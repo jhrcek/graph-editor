@@ -6,8 +6,10 @@ module Types
         , EdgeLabel(..)
         , EditState(..)
         , EditorMode(..)
+        , ExportFormat(..)
         , GraphEdge
         , GraphNode
+        , ModalState(..)
         , Model
         , ModelGraph
         , Msg(..)
@@ -32,8 +34,7 @@ type alias Model =
     , newNodeId : Int
     , draggedNode : Maybe Drag
     , editorMode : EditorMode
-    , helpEnabled : Bool
-    , aboutEnabled : Bool
+    , modalState : ModalState
     , windowSize : Window.Size
     }
 
@@ -72,11 +73,9 @@ type Msg
       -- Switching between modes
     | SetMode EditorMode
     | SetBoundingBox BBox
-    | ToggleHelp Bool
-    | ToggleAbout Bool
+    | ModalStateChange ModalState
     | WindowResized Window.Size
-    | ExportTgf
-    | ExportDot
+    | Download ExportFormat
     | NoOp
 
 
@@ -84,6 +83,18 @@ type DragMsg
     = DragStart NodeId Position
     | DragAt Position
     | DragEnd Position
+
+
+type ModalState
+    = Hidden
+    | Help
+    | About
+    | Export ExportFormat
+
+
+type ExportFormat
+    = Dot
+    | Tgf
 
 
 type alias Drag =
