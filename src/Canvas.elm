@@ -25,7 +25,7 @@ boxedText ({ id, label } as node) editorMode =
 
         modeDependentAttributes =
             case editorMode of
-                MoveMode ->
+                LayoutMode ->
                     [ onClickStartDrag id, style [ ( "cursor", "move" ) ] ]
 
                 EditMode editState ->

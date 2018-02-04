@@ -1,19 +1,20 @@
 module View exposing (focusLabelInput, view)
 
 import Canvas
+import Data.Layout as Layout
 import Dom
 import Export
 import Graph
 import GraphUtil
 import Html exposing (Html, button, div, form, h3, input, text, textarea)
-import Html.Attributes exposing (checked, class, id, name, placeholder, readonly, rows, size, style, type_, value)
+import Html.Attributes exposing (checked, class, classList, id, name, placeholder, readonly, rows, size, style, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Markdown
 import Svg exposing (Svg)
 import Svg.Attributes exposing (fill)
 import SvgMouse
 import Task
-import Types exposing (Drag, EdgeLabel(..), EditState(..), EditorMode(..), ExportFormat(..), GraphEdge, GraphNode, ModalState(..), Model, ModelGraph, Msg(..), isEditMode, nodeLabelToString)
+import Types exposing (Drag, EdgeLabel(..), EditState(..), EditorMode(..), ExportFormat(..), GraphEdge, GraphNode, ModalState(..), Model, ModelGraph, Msg(..), nodeLabelToString)
 import Window
 
 
@@ -47,7 +48,6 @@ viewCanvas editorMode graph maybeDrag winSize =
                 ++ [ style
                         [ ( "width", toString winSize.width ++ "px" )
                         , ( "height", toString winSize.height ++ "px" )
-                        , ( "position", "fixed" )
                         ]
                    ]
     in
@@ -177,16 +177,14 @@ edgeForm ({ from, to } as edge) graph =
     labelForm EdgeLabelEdit EdgeLabelEditConfirm "Edge text" currentText formX formY
 
 
-
--- TODO 95 and 13 are hardcoded halves of the form size 190 x 30
-
-
 labelForm : (String -> Msg) -> Msg -> String -> String -> Int -> Int -> Html Msg
 labelForm editMsg confirmMsg placeholderVal currentValue x y =
     form
         [ onSubmit confirmMsg
         , style
             [ ( "position", "absolute" )
+
+            -- 95 and 13 are hardcoded halves of the form size 190 x 30
             , ( "left", toString (x - 95) ++ "px" )
             , ( "top", toString (y - 13) ++ "px" )
             ]
@@ -198,32 +196,57 @@ labelForm editMsg confirmMsg placeholderVal currentValue x y =
 
 controlsPanel : EditorMode -> Html Msg
 controlsPanel editorMode =
-    div []
+    div [ style [ ( "position", "absolute" ), ( "top", "0" ), ( "width", "100%" ) ] ]
         [ modeButtons editorMode
+        , if editorMode == LayoutMode then
+            layoutEngineButtons
+          else
+            text ""
         , helpAndAboutButtons
         ]
 
 
 modeButtons : EditorMode -> Html Msg
-modeButtons currentMode =
+modeButtons editorMode =
+    let
+        ( isEdit, isLayout, isDeletion ) =
+            case editorMode of
+                EditMode _ ->
+                    ( True, False, False )
+
+                LayoutMode ->
+                    ( False, True, False )
+
+                DeletionMode ->
+                    ( False, False, True )
+    in
     div [ class "btn-group m-2" ]
-        [ modeButton (isEditMode currentMode) "Create/Edit" (EditMode EditingNothing)
-        , modeButton (currentMode == MoveMode) "Move" MoveMode
-        , modeButton (currentMode == DeletionMode) "Delete" DeletionMode
+        [ modeButton isEdit "Create/Edit" (EditMode EditingNothing)
+        , modeButton isLayout "Layout" LayoutMode
+        , modeButton isDeletion "Delete" DeletionMode
         ]
 
 
 modeButton : Bool -> String -> EditorMode -> Html Msg
 modeButton isActive modeText mode =
-    let
-        btnClass =
-            if isActive then
-                "btn btn-primary"
-            else
-                "btn btn-secondary"
-    in
-    button [ type_ "button", class btnClass, onClick (SetMode mode) ]
+    button
+        [ type_ "button"
+        , onClick (SetMode mode)
+        , classList [ ( "btn", True ), ( "btn-primary", isActive ), ( "btn-secondary", not isActive ) ]
+        ]
         [ text modeText ]
+
+
+layoutEngineButtons : Html Msg
+layoutEngineButtons =
+    div [ class "btn-group btn-group-sm" ] <|
+        List.map layoutEngineButton [ Layout.Dot, Layout.Circo, Layout.Fdp, Layout.Neato, Layout.Osage, Layout.Twopi ]
+
+
+layoutEngineButton : Layout.LayoutEngine -> Html Msg
+layoutEngineButton layoutEngine =
+    button [ class "btn btn-secondary", onClick (PerformAutomaticLayout layoutEngine) ]
+        [ text (Layout.engineToString layoutEngine) ]
 
 
 helpAndAboutButtons : Html Msg
@@ -320,7 +343,8 @@ In **Create/Edit** mode you can
   * Create new edges by **click & holding** mouse button on a node, dragging and **releasing mouse** on target node.
   * Edit edge text by **double clicking** edges. Enter confirms the edit.
 
-In **Move** mode you can organize your nodes by drag & drop: click and hold the mouse on node, move it where you want and release the mouse button.
+In **Layout** mode you can move nodes by drag & drop: click and hold the mouse on node, move it where you want and release the mouse button.
+Alternatively you can select one of the provided layout engines (based on [GraphViz](https://graphviz.gitlab.io/) via [viz.js](http://viz-js.com/)) to arrange the nodes automatically.
 
 In **Delete** mode you can remove nodes and edges from the graph by just clicking them. Removing a node removes all its incoming and outgoing edges.
   """

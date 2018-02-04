@@ -3,6 +3,7 @@ module Main exposing (main)
 import Export
 import Graph exposing (NodeId)
 import GraphUtil
+import GraphViz.VizJs
 import Html
 import Mouse
 import Ports
@@ -179,6 +180,21 @@ update msg model =
                         }
                   ]
 
+        ReceiveLayoutInfoFromGraphviz jsonVal ->
+            case GraphViz.VizJs.processGraphVizResponse jsonVal model.windowSize of
+                Ok newPositionsDict ->
+                    { model | graph = GraphUtil.updateNodePositions newPositionsDict model.graph } ! []
+
+                Err err ->
+                    let
+                        _ =
+                            Debug.log "Failure when processing GraphViz response" err
+                    in
+                    model ! []
+
+        PerformAutomaticLayout layoutEngine ->
+            model ! [ Ports.requestGraphVizPlain layoutEngine model.graph ]
+
         NoOp ->
             model ! []
 
@@ -243,6 +259,7 @@ subscriptions model =
         [ nodeDragDropSubscriptions model.draggedNode
         , edgeCreationSubscriptions model.editorMode
         , Ports.setBoundingBox SetBoundingBox
+        , Ports.receiveGraphVizPlain ReceiveLayoutInfoFromGraphviz
         , Window.resizes WindowResized
         ]
 

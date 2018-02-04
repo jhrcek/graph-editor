@@ -17,14 +17,15 @@ module Types
         , NodeText(..)
         , edgeLabelToString
         , getDraggedNodePosition
-        , isEditMode
         , nodeLabelToString
         , setBBoxOfEdgeLabel
         , setBBoxOfNodeText
         , setEdgeText
         )
 
+import Data.Layout exposing (LayoutEngine)
 import Graph exposing (Graph, NodeId)
+import Json.Decode
 import Mouse exposing (Position)
 import Window
 
@@ -72,10 +73,12 @@ type Msg
     | DeleteEdge NodeId NodeId
       -- Switching between modes
     | SetMode EditorMode
+    | PerformAutomaticLayout LayoutEngine
     | SetBoundingBox BBox
     | ModalStateChange ModalState
     | WindowResized Window.Size
     | Download ExportFormat
+    | ReceiveLayoutInfoFromGraphviz Json.Decode.Value
     | NoOp
 
 
@@ -154,19 +157,9 @@ edgeLabelToString (EdgeLabel _ string) =
 
 
 type EditorMode
-    = MoveMode
+    = LayoutMode
     | EditMode EditState
     | DeletionMode
-
-
-isEditMode : EditorMode -> Bool
-isEditMode mode =
-    case mode of
-        EditMode _ ->
-            True
-
-        _ ->
-            False
 
 
 type EditState

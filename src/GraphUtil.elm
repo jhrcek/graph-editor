@@ -8,10 +8,11 @@ module GraphUtil
         , setNodeText
         , updateDraggedNode
         , updateNodeLabel
+        , updateNodePositions
         )
 
 import Graph exposing (Adjacency, Node, NodeContext, NodeId)
-import IntDict
+import IntDict exposing (IntDict)
 import Types exposing (BBox, Drag, EdgeLabel(..), GraphEdge, GraphNode, ModelGraph, NodeLabel, NodeText(..), setBBoxOfEdgeLabel, setBBoxOfNodeText)
 
 
@@ -123,3 +124,23 @@ setEdgeBoundingBox : NodeId -> NodeId -> BBox -> ModelGraph -> ModelGraph
 setEdgeBoundingBox fromId toId bbox =
     Graph.update fromId
         (Maybe.map <| updateOutgoingAdjacency <| IntDict.update toId <| Maybe.map <| setBBoxOfEdgeLabel bbox)
+
+
+updateNodePositions : IntDict { x : Float, y : Float } -> ModelGraph -> ModelGraph
+updateNodePositions positionDict graph =
+    Graph.mapContexts (setNewPositionForNode positionDict) graph
+
+
+setNewPositionForNode :
+    IntDict { x : Float, y : Float }
+    -> Graph.NodeContext NodeLabel EdgeLabel
+    -> Graph.NodeContext NodeLabel EdgeLabel
+setNewPositionForNode positionDict nodeContext =
+    case IntDict.get nodeContext.node.id positionDict of
+        Just newPos ->
+            updateNodeInContext
+                (updateLabelInNode (\nodeLabel -> { nodeLabel | x = round newPos.x, y = round newPos.y }))
+                nodeContext
+
+        Nothing ->
+            nodeContext
