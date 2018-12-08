@@ -1,33 +1,36 @@
-module Types
-    exposing
-        ( BBox
-        , Drag
-        , DragMsg(..)
-        , EdgeLabel(..)
-        , EditState(..)
-        , EditorMode(..)
-        , ExportFormat(..)
-        , GraphEdge
-        , GraphNode
-        , ModalState(..)
-        , Model
-        , ModelGraph
-        , Msg(..)
-        , NodeLabel
-        , NodeText(..)
-        , edgeLabelToString
-        , getDraggedNodePosition
-        , nodeLabelToString
-        , setBBoxOfEdgeLabel
-        , setBBoxOfNodeText
-        , setEdgeText
-        )
+module Types exposing
+    ( BBox
+    , Drag
+    , DragMsg(..)
+    , EdgeLabel(..)
+    , EditState(..)
+    , EditorMode(..)
+    , ExportFormat(..)
+    , GraphEdge
+    , GraphNode
+    , ModalState(..)
+    , Model
+    , ModelGraph
+    , MousePosition
+    , Msg(..)
+    , NodeLabel
+    , NodeText(..)
+    , WindowSize
+    , edgeLabelToString
+    , exportFormatToString
+    , getDraggedNodePosition
+    , mousePositionDecoder
+    , nodeLabelToString
+    , setBBoxOfEdgeLabel
+    , setBBoxOfNodeText
+    , setEdgeText
+    )
 
+import Browser.Dom
 import Data.Layout exposing (LayoutEngine)
 import Graph exposing (Graph, NodeId)
-import Json.Decode
-import Mouse exposing (Position)
-import Window
+import Json.Decode as Decode exposing (Decoder)
+import Json.Encode
 
 
 type alias Model =
@@ -36,8 +39,27 @@ type alias Model =
     , draggedNode : Maybe Drag
     , editorMode : EditorMode
     , modalState : ModalState
-    , windowSize : Window.Size
+    , windowSize : WindowSize
     }
+
+
+type alias WindowSize =
+    { width : Float
+    , height : Float
+    }
+
+
+type alias MousePosition =
+    { x : Int
+    , y : Int
+    }
+
+
+mousePositionDecoder : Decoder MousePosition
+mousePositionDecoder =
+    Decode.map2 MousePosition
+        (Decode.field "pageX" Decode.int)
+        (Decode.field "pageY" Decode.int)
 
 
 type alias ModelGraph =
@@ -53,7 +75,7 @@ type alias GraphEdge =
 
 
 type Msg
-    = CreateNode Position
+    = CreateNode MousePosition
     | NodeDrag DragMsg
       -- Editing Node label
     | NodeLabelEditStart GraphNode
@@ -67,7 +89,7 @@ type Msg
     | StartNodeOfEdgeSelected NodeId
     | EndNodeOfEdgeSelected NodeId
     | UnselectStartNodeOfEdge
-    | PreviewEdgeEndpointPositionChanged Mouse.Position
+    | PreviewEdgeEndpointPositionChanged MousePosition
       -- Deleting Nodes and Edges
     | DeleteNode NodeId
     | DeleteEdge NodeId NodeId
@@ -76,16 +98,17 @@ type Msg
     | PerformAutomaticLayout LayoutEngine
     | SetBoundingBox BBox
     | ModalStateChange ModalState
-    | WindowResized Window.Size
+    | GotViewport Browser.Dom.Viewport
+    | WindowResized Int Int
     | Download ExportFormat
-    | ReceiveLayoutInfoFromGraphviz Json.Decode.Value
+    | ReceiveLayoutInfoFromGraphviz Json.Encode.Value
     | NoOp
 
 
 type DragMsg
-    = DragStart NodeId Position
-    | DragAt Position
-    | DragEnd Position
+    = DragStart NodeId MousePosition
+    | DragAt MousePosition
+    | DragEnd MousePosition
 
 
 type ModalState
@@ -100,10 +123,20 @@ type ExportFormat
     | Tgf
 
 
+exportFormatToString : ExportFormat -> String
+exportFormatToString exportFormat =
+    case exportFormat of
+        Dot ->
+            "Dot"
+
+        Tgf ->
+            "Tgf"
+
+
 type alias Drag =
     { nodeId : NodeId
-    , start : Position
-    , current : Position
+    , start : MousePosition
+    , current : MousePosition
     }
 
 
@@ -152,10 +185,6 @@ edgeLabelToString (EdgeLabel _ string) =
     string
 
 
-
--- | Sized BBox String
-
-
 type EditorMode
     = LayoutMode
     | EditMode EditState
@@ -164,7 +193,7 @@ type EditorMode
 
 type EditState
     = EditingNothing
-    | CreatingEdge NodeId Mouse.Position
+    | CreatingEdge NodeId MousePosition
     | EditingEdgeLabel GraphEdge
     | EditingNodeLabel GraphNode
 

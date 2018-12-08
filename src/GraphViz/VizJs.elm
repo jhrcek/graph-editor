@@ -1,9 +1,15 @@
-module GraphViz.VizJs exposing (NodePositions, processGraphVizResponse)
+module GraphViz.VizJs exposing
+    ( NodePositions
+    , PlainGraph
+    , PlainSource(..)
+    , parsePlainSource
+    , processGraphVizResponse
+    )
 
 import IntDict exposing (IntDict)
 import Json.Decode as Decode exposing (Decoder)
 import Parser exposing ((|.), (|=), Parser)
-import Window
+import Types exposing (WindowSize)
 
 
 type alias NodePositions =
@@ -13,7 +19,7 @@ type alias NodePositions =
         }
 
 
-processGraphVizResponse : Decode.Value -> Window.Size -> Result String NodePositions
+processGraphVizResponse : Decode.Value -> WindowSize -> Result String NodePositions
 processGraphVizResponse value windowSize =
     decodeGraphvizResponse value
         |> Result.andThen parsePlainSource
@@ -28,7 +34,7 @@ decodeGraphvizResponse : Decode.Value -> Result String PlainSource
 decodeGraphvizResponse value =
     case Decode.decodeValue graphVizResponseDecoder value of
         Err decodeErr ->
-            Err decodeErr
+            Err <| Decode.errorToString decodeErr
 
         Ok result ->
             result
@@ -72,30 +78,37 @@ type alias PlainNode =
 parsePlainSource : PlainSource -> Result String PlainGraph
 parsePlainSource (PlainSource plainSource) =
     Parser.run plainGraphParser plainSource
-        |> Result.mapError toString
+        |> Result.mapError Parser.deadEndsToString
 
 
 plainGraphParser : Parser PlainGraph
 plainGraphParser =
     Parser.succeed PlainGraph
         |. Parser.keyword "graph"
-        |. spaces
+        |. Parser.spaces
         --scale
         |= Parser.float
-        |. spaces
+        |. Parser.spaces
         --width
         |= Parser.float
-        |. spaces
+        |. Parser.spaces
         --height
         |= Parser.float
-        |. Parser.ignoreUntil "\n"
+        |. Parser.chompIf (\char -> char == '\n')
         |= listOfNodesParser
-        |. Parser.ignoreUntil "stop"
+        |. Parser.chompUntil "stop"
 
 
 listOfNodesParser : Parser (List PlainNode)
 listOfNodesParser =
-    Parser.repeat Parser.zeroOrMore plainNodeParser
+    Parser.sequence
+        { start = ""
+        , separator = ""
+        , end = ""
+        , spaces = Parser.spaces
+        , item = plainNodeParser
+        , trailing = Parser.Forbidden
+        }
 
 
 {-| Parse nodeId, x and y coordinate from GraphViz plain format's node line which has the format
@@ -105,35 +118,30 @@ plainNodeParser : Parser PlainNode
 plainNodeParser =
     Parser.succeed PlainNode
         |. Parser.keyword "node"
-        |. spaces
+        |. Parser.spaces
         -- nodeId
         |= Parser.int
-        |. spaces
+        |. Parser.spaces
         -- x
         |= Parser.float
-        |. spaces
+        |. Parser.spaces
         -- y
         |= Parser.float
-        |. Parser.ignoreUntil "\n"
-
-
-spaces : Parser ()
-spaces =
-    Parser.ignore Parser.zeroOrMore (\chr -> chr == ' ')
+        |. Parser.chompUntil "\n"
 
 
 
 -- Scaling to window Size
 
 
-scaleToWindow : Window.Size -> PlainGraph -> NodePositions
+scaleToWindow : WindowSize -> PlainGraph -> NodePositions
 scaleToWindow windowSize plainGraph =
     let
         scaleX =
-            toFloat windowSize.width / plainGraph.width
+            windowSize.width / plainGraph.width
 
         scaleY =
-            toFloat windowSize.height / plainGraph.height
+            windowSize.height / plainGraph.height
     in
     plainGraph.nodes
         |> List.map

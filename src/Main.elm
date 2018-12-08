@@ -1,16 +1,36 @@
 module Main exposing (main)
 
+import Browser
+import Browser.Dom
+import Browser.Events
 import Export
 import Graph exposing (NodeId)
 import GraphUtil
 import GraphViz.VizJs
-import Html
-import Mouse
+import Json.Decode as Decode
 import Ports
 import Task
-import Types exposing (Drag, DragMsg(..), EdgeLabel(..), EditState(..), EditorMode(..), GraphNode, ModalState(..), Model, ModelGraph, Msg(..), NodeLabel, NodeText(..), nodeLabelToString, setEdgeText)
+import Types
+    exposing
+        ( Drag
+        , DragMsg(..)
+        , EdgeLabel(..)
+        , EditState(..)
+        , EditorMode(..)
+        , GraphNode
+        , ModalState(..)
+        , Model
+        , ModelGraph
+        , MousePosition
+        , Msg(..)
+        , NodeLabel
+        , NodeText(..)
+        , WindowSize
+        , mousePositionDecoder
+        , nodeLabelToString
+        , setEdgeText
+        )
 import View
-import Window
 
 
 initialGraph : ModelGraph
@@ -18,8 +38,8 @@ initialGraph =
     Graph.empty
 
 
-init : ( Model, Cmd Msg )
-init =
+init : () -> ( Model, Cmd Msg )
+init _ =
     ( { graph = initialGraph
       , newNodeId = Graph.size initialGraph
       , draggedNode = Nothing
@@ -29,7 +49,7 @@ init =
       }
     , Cmd.batch
         [ Ports.requestBoundingBoxesForEverything initialGraph
-        , Task.perform WindowResized Window.size
+        , Task.perform GotViewport Browser.Dom.getViewport
         ]
     )
 
@@ -42,17 +62,20 @@ update msg model =
                 newNode =
                     makeNode model.newNodeId x y ""
             in
-            { model
+            ( { model
                 | graph = GraphUtil.insertNode newNode model.graph
                 , newNodeId = model.newNodeId + 1
-            }
-                ! [ Ports.requestNodeTextBoundingBox model.newNodeId ]
+              }
+            , Ports.requestNodeTextBoundingBox model.newNodeId
+            )
 
         NodeDrag dragMsg ->
             processDragMsg dragMsg model
 
         NodeLabelEditStart node ->
-            { model | editorMode = EditMode (EditingNodeLabel node) } ! [ View.focusLabelInput ]
+            ( { model | editorMode = EditMode (EditingNodeLabel node) }
+            , View.focusLabelInput
+            )
 
         NodeLabelEdit newNodeText ->
             let
@@ -64,7 +87,9 @@ update msg model =
                         _ ->
                             model.editorMode
             in
-            { model | editorMode = newEditorMode } ! []
+            ( { model | editorMode = newEditorMode }
+            , Cmd.none
+            )
 
         NodeLabelEditConfirm ->
             let
@@ -78,10 +103,14 @@ update msg model =
                         _ ->
                             ( model.graph, Cmd.none )
             in
-            { model | graph = newGraph, editorMode = EditMode EditingNothing } ! [ command ]
+            ( { model | graph = newGraph, editorMode = EditMode EditingNothing }
+            , command
+            )
 
         EdgeLabelEditStart edge ->
-            { model | editorMode = EditMode (EditingEdgeLabel edge) } ! [ View.focusLabelInput ]
+            ( { model | editorMode = EditMode (EditingEdgeLabel edge) }
+            , View.focusLabelInput
+            )
 
         EdgeLabelEdit newText ->
             let
@@ -93,7 +122,9 @@ update msg model =
                         _ ->
                             model.editorMode
             in
-            { model | editorMode = newEditorMode } ! []
+            ( { model | editorMode = newEditorMode }
+            , Cmd.none
+            )
 
         EdgeLabelEditConfirm ->
             let
@@ -105,14 +136,18 @@ update msg model =
                         _ ->
                             ( model.graph, Cmd.none )
             in
-            { model | graph = newGraph, editorMode = EditMode EditingNothing } ! [ command ]
+            ( { model | graph = newGraph, editorMode = EditMode EditingNothing }
+            , command
+            )
 
         StartNodeOfEdgeSelected nodeId ->
             let
                 selectedNodeLabel =
                     GraphUtil.getNode nodeId model.graph |> .label
             in
-            { model | editorMode = EditMode (CreatingEdge nodeId { x = selectedNodeLabel.x, y = selectedNodeLabel.y }) } ! []
+            ( { model | editorMode = EditMode (CreatingEdge nodeId { x = selectedNodeLabel.x, y = selectedNodeLabel.y }) }
+            , Cmd.none
+            )
 
         EndNodeOfEdgeSelected endNodeId ->
             let
@@ -126,13 +161,19 @@ update msg model =
                         _ ->
                             ( model.graph, Cmd.none )
             in
-            { model | graph = newGraph, editorMode = EditMode EditingNothing } ! [ command ]
+            ( { model | graph = newGraph, editorMode = EditMode EditingNothing }
+            , command
+            )
 
         UnselectStartNodeOfEdge ->
-            { model | editorMode = EditMode EditingNothing } ! []
+            ( { model | editorMode = EditMode EditingNothing }
+            , Cmd.none
+            )
 
         PreviewEdgeEndpointPositionChanged mousePosition ->
-            setMousePositionIfCreatingEdge mousePosition model ! []
+            ( setMousePositionIfCreatingEdge mousePosition model
+            , Cmd.none
+            )
 
         DeleteNode nodeId ->
             let
@@ -143,25 +184,48 @@ update msg model =
                     --after last node deleted switch back to node creation mode
                     if Graph.isEmpty newGraph then
                         EditMode EditingNothing
+
                     else
                         model.editorMode
             in
-            { model | graph = newGraph, editorMode = newEditorMode } ! []
+            ( { model | graph = newGraph, editorMode = newEditorMode }
+            , Cmd.none
+            )
 
         DeleteEdge fromId toId ->
-            { model | graph = GraphUtil.removeEdge fromId toId model.graph } ! []
+            ( { model | graph = GraphUtil.removeEdge fromId toId model.graph }
+            , Cmd.none
+            )
 
         SetMode mode ->
-            { model | editorMode = mode } ! []
+            ( { model | editorMode = mode }
+            , Cmd.none
+            )
 
         SetBoundingBox bbox ->
-            { model | graph = GraphUtil.setBoundingBox bbox model.graph } ! []
+            ( { model | graph = GraphUtil.setBoundingBox bbox model.graph }
+            , Cmd.none
+            )
 
         ModalStateChange newModalState ->
-            { model | modalState = newModalState } ! []
+            ( { model | modalState = newModalState }
+            , Cmd.none
+            )
 
-        WindowResized sz ->
-            { model | windowSize = sz } ! []
+        GotViewport viewport ->
+            ( { model | windowSize = extractWindowSize viewport }
+            , Cmd.none
+            )
+
+        WindowResized w h ->
+            ( { model
+                | windowSize =
+                    { width = toFloat w
+                    , height = toFloat h
+                    }
+              }
+            , Cmd.none
+            )
 
         Download exportFormat ->
             let
@@ -173,33 +237,37 @@ update msg model =
                         Types.Tgf ->
                             ( "tgf", Export.toTgf )
             in
-            model
-                ! [ Ports.download
-                        { filename = "graph." ++ fileExtension
-                        , data = graphToString model.graph
-                        }
-                  ]
+            ( model
+            , Ports.download
+                { filename = "graph." ++ fileExtension
+                , data = graphToString model.graph
+                }
+            )
 
         ReceiveLayoutInfoFromGraphviz jsonVal ->
-            case GraphViz.VizJs.processGraphVizResponse jsonVal model.windowSize of
-                Ok newPositionsDict ->
-                    { model | graph = GraphUtil.updateNodePositions newPositionsDict model.graph } ! []
-
-                Err err ->
-                    let
-                        _ =
-                            Debug.log "Failure when processing GraphViz response" err
-                    in
-                    model ! []
+            let
+                newModel =
+                    GraphViz.VizJs.processGraphVizResponse jsonVal model.windowSize
+                        |> Result.map
+                            (\newPositionsDict ->
+                                { model | graph = GraphUtil.updateNodePositions newPositionsDict model.graph }
+                            )
+                        |> Result.withDefault model
+            in
+            ( newModel, Cmd.none )
 
         PerformAutomaticLayout layoutEngine ->
-            model ! [ Ports.requestGraphVizPlain layoutEngine model.graph ]
+            ( model
+            , Ports.requestGraphVizPlain layoutEngine model.graph
+            )
 
         NoOp ->
-            model ! []
+            ( model
+            , Cmd.none
+            )
 
 
-setMousePositionIfCreatingEdge : Mouse.Position -> Model -> Model
+setMousePositionIfCreatingEdge : MousePosition -> Model -> Model
 setMousePositionIfCreatingEdge mousePosition model =
     let
         newEditorMode =
@@ -217,10 +285,14 @@ processDragMsg : DragMsg -> Model -> ( Model, Cmd Msg )
 processDragMsg msg model =
     case msg of
         DragStart nodeId xy ->
-            { model | draggedNode = Just (Drag nodeId xy xy) } ! []
+            ( { model | draggedNode = Just (Drag nodeId xy xy) }
+            , Cmd.none
+            )
 
         DragAt xy ->
-            { model | draggedNode = Maybe.map (\{ nodeId, start } -> Drag nodeId start xy) model.draggedNode } ! []
+            ( { model | draggedNode = Maybe.map (\{ nodeId, start } -> Drag nodeId start xy) model.draggedNode }
+            , Cmd.none
+            )
 
         DragEnd _ ->
             let
@@ -235,7 +307,9 @@ processDragMsg msg model =
                         model.draggedNode
                         |> Maybe.withDefault ( model.graph, Cmd.none )
             in
-            { model | graph = newGraph, draggedNode = Nothing } ! [ command ]
+            ( { model | graph = newGraph, draggedNode = Nothing }
+            , command
+            )
 
 
 makeNode : NodeId -> Int -> Int -> String -> GraphNode
@@ -260,7 +334,7 @@ subscriptions model =
         , edgeCreationSubscriptions model.editorMode
         , Ports.setBoundingBox SetBoundingBox
         , Ports.receiveGraphVizPlain ReceiveLayoutInfoFromGraphviz
-        , Window.resizes WindowResized
+        , Browser.Events.onResize WindowResized
         ]
 
 
@@ -272,8 +346,10 @@ nodeDragDropSubscriptions maybeDrag =
 
         Just _ ->
             Sub.batch
-                [ Mouse.moves (NodeDrag << DragAt)
-                , Mouse.ups (NodeDrag << DragEnd)
+                [ Browser.Events.onMouseMove <|
+                    Decode.map (NodeDrag << DragAt) mousePositionDecoder
+                , Browser.Events.onMouseUp <|
+                    Decode.map (NodeDrag << DragEnd) mousePositionDecoder
                 ]
 
 
@@ -281,17 +357,25 @@ edgeCreationSubscriptions : EditorMode -> Sub Msg
 edgeCreationSubscriptions editorMode =
     case editorMode of
         EditMode (CreatingEdge _ _) ->
-            Mouse.moves PreviewEdgeEndpointPositionChanged
+            Browser.Events.onMouseMove <|
+                Decode.map PreviewEdgeEndpointPositionChanged mousePositionDecoder
 
         _ ->
             Sub.none
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.program
+    Browser.element
         { init = init
+        , view = View.view
         , update = update
         , subscriptions = subscriptions
-        , view = View.view
         }
+
+
+extractWindowSize : Browser.Dom.Viewport -> WindowSize
+extractWindowSize { viewport } =
+    { width = viewport.width
+    , height = viewport.height
+    }

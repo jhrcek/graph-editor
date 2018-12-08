@@ -1,4 +1,7 @@
-module Data.Layout exposing (LayoutEngine(..), engineToString)
+module Data.Layout exposing
+    ( LayoutEngine(..)
+    , engineToString
+    )
 
 
 type LayoutEngine

@@ -1,8 +1,8 @@
 module View exposing (focusLabelInput, view)
 
+import Browser.Dom
 import Canvas
 import Data.Layout as Layout
-import Dom
 import Export
 import Graph
 import GraphUtil
@@ -14,8 +14,7 @@ import Svg exposing (Svg)
 import Svg.Attributes exposing (fill)
 import SvgMouse
 import Task
-import Types exposing (Drag, EdgeLabel(..), EditState(..), EditorMode(..), ExportFormat(..), GraphEdge, GraphNode, ModalState(..), Model, ModelGraph, Msg(..), nodeLabelToString)
-import Window
+import Types exposing (Drag, EdgeLabel(..), EditState(..), EditorMode(..), ExportFormat(..), GraphEdge, GraphNode, ModalState(..), Model, ModelGraph, Msg(..), WindowSize, exportFormatToString, nodeLabelToString)
 
 
 view : Model -> Html Msg
@@ -29,7 +28,7 @@ view { graph, draggedNode, editorMode, windowSize, modalState } =
         ]
 
 
-viewCanvas : EditorMode -> ModelGraph -> Maybe Drag -> Window.Size -> Html Msg
+viewCanvas : EditorMode -> ModelGraph -> Maybe Drag -> WindowSize -> Html Msg
 viewCanvas editorMode graph maybeDrag winSize =
     let
         canvasEventListeners =
@@ -45,15 +44,20 @@ viewCanvas editorMode graph maybeDrag winSize =
 
         svgElemAttributes =
             canvasEventListeners
-                ++ [ style
-                        [ ( "width", toString winSize.width ++ "px" )
-                        , ( "height", toString winSize.height ++ "px" )
-                        ]
+                ++ [ style "width" (String.fromFloat winSize.width ++ "px")
+                   , style "height" (String.fromFloat winSize.height ++ "px")
                    ]
     in
     Svg.svg svgElemAttributes <|
         if Graph.isEmpty graph then
-            [ Canvas.positionedText (winSize.width // 2) (winSize.height // 2) "emptyGraphText" "Click anywhere to create first node" [ fill "grey" ] ]
+            [ Canvas.positionedText
+                (round <| winSize.width / 2)
+                (round <| winSize.height / 2)
+                "emptyGraphText"
+                "Click anywhere to create the first node"
+                [ fill "grey" ]
+            ]
+
         else
             nonEmptyGraphView editorMode maybeDrag graph
 
@@ -119,6 +123,7 @@ applyDrag mDrag node =
         Just drag ->
             if drag.nodeId == node.id then
                 { node | label = Types.getDraggedNodePosition drag node.label }
+
             else
                 node
 
@@ -181,13 +186,11 @@ labelForm : (String -> Msg) -> Msg -> String -> String -> Int -> Int -> Html Msg
 labelForm editMsg confirmMsg placeholderVal currentValue x y =
     form
         [ onSubmit confirmMsg
-        , style
-            [ ( "position", "absolute" )
+        , style "position" "absolute"
 
-            -- 95 and 13 are hardcoded halves of the form size 190 x 30
-            , ( "left", toString (x - 95) ++ "px" )
-            , ( "top", toString (y - 13) ++ "px" )
-            ]
+        -- 95 and 13 are hardcoded halves of the form size 190 x 30
+        , style "left" (String.fromInt (x - 95) ++ "px")
+        , style "top" (String.fromInt (y - 13) ++ "px")
         ]
         [ input [ type_ "text", placeholder placeholderVal, value currentValue, onInput editMsg, id labelInputId, size 15 ] []
         , button [ onClick confirmMsg ] [ text "OK" ]
@@ -196,10 +199,11 @@ labelForm editMsg confirmMsg placeholderVal currentValue x y =
 
 controlsPanel : EditorMode -> Html Msg
 controlsPanel editorMode =
-    div [ style [ ( "position", "absolute" ), ( "top", "0" ), ( "width", "100%" ) ] ]
+    div [ style "position" "absolute", style "top" "0", style "width" "100%" ]
         [ modeButtons editorMode
         , if editorMode == LayoutMode then
             layoutEngineButtons
+
           else
             text ""
         , helpAndAboutButtons
@@ -251,7 +255,7 @@ layoutEngineButton layoutEngine =
 
 helpAndAboutButtons : Html Msg
 helpAndAboutButtons =
-    div [ class "btn-group m-2", style [ ( "position", "absolute" ), ( "right", "0px" ) ] ]
+    div [ class "btn-group m-2", style "position" "absolute", style "right" "0px" ]
         [ button [ type_ "button", class "btn btn-secondary", onClick (ModalStateChange (Export Dot)) ] [ text "Export" ]
         , button [ type_ "button", class "btn btn-secondary", onClick (ModalStateChange Help) ] [ text "Help" ]
         , button [ type_ "button", class "btn btn-secondary", onClick (ModalStateChange About) ] [ text "About" ]
@@ -277,7 +281,7 @@ viewModal modalState graph =
 modal : String -> Html Msg -> Html Msg
 modal title body =
     div []
-        [ div [ class "modal fade show", style [ ( "display", "block" ) ] ]
+        [ div [ class "modal fade show", style "display" "block" ]
             [ div [ class "modal-dialog" ]
                 [ div [ class "modal-content" ]
                     [ div [ class "modal-header" ]
@@ -310,7 +314,7 @@ exportModalBody currentFormat graph =
             , formatRadio currentFormat Dot
             , formatRadio currentFormat Tgf
             ]
-        , div [] [ textarea [ style [ ( "width", "100%" ) ], readonly True, rows 15 ] [ text exportPreview ] ]
+        , div [] [ textarea [ style "width" "100%", readonly True, rows 15 ] [ text exportPreview ] ]
         , div [] [ button [ class "btn btn-primary float-right", onClick (Download currentFormat) ] [ text "Download" ] ]
         ]
 
@@ -326,7 +330,7 @@ formatRadio currentFormat desiredFormat =
             , class "mx-1"
             ]
             []
-        , text <| toString desiredFormat
+        , text <| exportFormatToString desiredFormat
         ]
 
 
@@ -370,6 +374,6 @@ labelInputId =
 
 focusLabelInput : Cmd Msg
 focusLabelInput =
-    Dom.focus labelInputId
-        -- focusing DOM element might fail if the element with given id is not found - ignoring this case
-        |> Task.attempt (always NoOp)
+    Task.attempt
+        (\_ -> NoOp)
+        (Browser.Dom.focus labelInputId)

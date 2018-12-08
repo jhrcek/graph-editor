@@ -1,14 +1,13 @@
-port module Ports
-    exposing
-        ( download
-        , receiveGraphVizPlain
-        , requestBoundingBoxesForContext
-        , requestBoundingBoxesForEverything
-        , requestEdgeTextBoundingBox
-        , requestGraphVizPlain
-        , requestNodeTextBoundingBox
-        , setBoundingBox
-        )
+port module Ports exposing
+    ( download
+    , receiveGraphVizPlain
+    , requestBoundingBoxesForContext
+    , requestBoundingBoxesForEverything
+    , requestEdgeTextBoundingBox
+    , requestGraphVizPlain
+    , requestNodeTextBoundingBox
+    , setBoundingBox
+    )
 
 import Data.Layout as Layout
 import Export
@@ -20,12 +19,12 @@ import Types exposing (BBox, EdgeLabel, ModelGraph, Msg, NodeLabel)
 
 requestNodeTextBoundingBox : NodeId -> Cmd msg
 requestNodeTextBoundingBox nodeId =
-    requestBoundingBox (toString nodeId)
+    requestBoundingBox (String.fromInt nodeId)
 
 
 requestEdgeTextBoundingBox : NodeId -> NodeId -> Cmd msg
 requestEdgeTextBoundingBox fromId toId =
-    requestBoundingBox (toString fromId ++ ":" ++ toString toId)
+    requestBoundingBox (String.fromInt fromId ++ ":" ++ String.fromInt toId)
 
 
 requestBoundingBoxesForEverything : ModelGraph -> Cmd Msg

@@ -1,15 +1,14 @@
-module GraphUtil
-    exposing
-        ( getNode
-        , insertEdge
-        , insertNode
-        , removeEdge
-        , setBoundingBox
-        , setNodeText
-        , updateDraggedNode
-        , updateNodeLabel
-        , updateNodePositions
-        )
+module GraphUtil exposing
+    ( getNode
+    , insertEdge
+    , insertNode
+    , removeEdge
+    , setBoundingBox
+    , setNodeText
+    , updateDraggedNode
+    , updateNodeLabel
+    , updateNodePositions
+    )
 
 import Graph exposing (Adjacency, Node, NodeContext, NodeId)
 import IntDict exposing (IntDict)
@@ -91,10 +90,23 @@ crashIfNodeNotInGraph : NodeId -> Maybe GraphNode -> GraphNode
 crashIfNodeNotInGraph nodeId mGraphNode =
     case mGraphNode of
         Nothing ->
-            Debug.crash <| "Node with id " ++ toString nodeId ++ " was not in the graph"
+            crashWorkAround nodeId
 
         Just node ->
             node
+
+
+{-| TODO avoid having to use this
+-}
+crashWorkAround : NodeId -> GraphNode
+crashWorkAround nodeId =
+    { id = -1
+    , label =
+        { nodeText = NodeText Nothing ("Node with id " ++ String.fromInt nodeId ++ " was not in the graph")
+        , x = 0
+        , y = 0
+        }
+    }
 
 
 setBoundingBox : BBox -> ModelGraph -> ModelGraph
@@ -102,13 +114,13 @@ setBoundingBox bbox graph =
     case String.split ":" bbox.elementId of
         [ nodeIdString ] ->
             String.toInt nodeIdString
-                |> Result.map (\nodeId -> setNodeBoundingBox nodeId bbox graph)
-                |> Result.withDefault graph
+                |> Maybe.map (\nodeId -> setNodeBoundingBox nodeId bbox graph)
+                |> Maybe.withDefault graph
 
         [ edgeFromIdStr, edgeToIdStr ] ->
-            Result.map2 (,) (String.toInt edgeFromIdStr) (String.toInt edgeToIdStr)
-                |> Result.map (\( fromId, toId ) -> setEdgeBoundingBox fromId toId bbox graph)
-                |> Result.withDefault graph
+            Maybe.map2 (\a b -> ( a, b )) (String.toInt edgeFromIdStr) (String.toInt edgeToIdStr)
+                |> Maybe.map (\( fromId, toId ) -> setEdgeBoundingBox fromId toId bbox graph)
+                |> Maybe.withDefault graph
 
         _ ->
             graph
