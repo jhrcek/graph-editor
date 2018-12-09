@@ -11,7 +11,7 @@ See it [in action](http://janhrcek.cz/graph-editor/)!
         - [x] Create new edges by click & holding mouse button on initial node and dropping on target node.
         - [x] Edit edge text by double clicking edges. Enter confirms the edit.
     - [x] In *Layout* mode you can move nodes on the canvas using drag and drop.
-        - [x] Alternatively you can get nodes arranged automatically using one of the supported [GraphViz](https://graphviz.gitlab.io/)'s laut engines
+        - [x] Alternatively you can get nodes arranged automatically using one of the supported [GraphViz](https://graphviz.gitlab.io/)'s layout engines
     - [x] In *Delete* mode you can remove nodes and edges by clicking them.
 - [x] Help button that shows/hides info about how users can create/edit graphs
 - [x] Export graph in different formats

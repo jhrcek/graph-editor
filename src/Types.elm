@@ -127,10 +127,10 @@ exportFormatToString : ExportFormat -> String
 exportFormatToString exportFormat =
     case exportFormat of
         Dot ->
-            "Dot"
+            "DOT"
 
         Tgf ->
-            "Tgf"
+            "TGF"
 
 
 type alias Drag =
