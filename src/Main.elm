@@ -4,6 +4,7 @@ import Browser
 import Browser.Dom
 import Browser.Events
 import Export
+import File.Download
 import Graph exposing (NodeId)
 import GraphUtil
 import GraphViz.VizJs
@@ -229,19 +230,16 @@ update msg model =
 
         Download exportFormat ->
             let
-                ( fileExtension, graphToString ) =
+                ( graphToString, fileName ) =
                     case exportFormat of
                         Types.Dot ->
-                            ( "gv", Export.toDot )
+                            ( Export.toDot, "graph.dot" )
 
                         Types.Tgf ->
-                            ( "tgf", Export.toTgf )
+                            ( Export.toTgf, "graph.tgf" )
             in
             ( model
-            , Ports.download
-                { filename = "graph." ++ fileExtension
-                , data = graphToString model.graph
-                }
+            , File.Download.string fileName "text/plain" (graphToString model.graph)
             )
 
         ReceiveLayoutInfoFromGraphviz jsonVal ->

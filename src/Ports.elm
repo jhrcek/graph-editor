@@ -1,6 +1,5 @@
 port module Ports exposing
-    ( download
-    , receiveGraphVizPlain
+    ( receiveGraphVizPlain
     , requestBoundingBoxesForContext
     , requestBoundingBoxesForEverything
     , requestEdgeTextBoundingBox
@@ -74,9 +73,6 @@ port requestBoundingBox : String -> Cmd msg
 
 
 port setBoundingBox : (BBox -> msg) -> Sub msg
-
-
-port download : { filename : String, data : String } -> Cmd msg
 
 
 {-| Request to transform Graphviz dot String to Graphviz plain.
