@@ -248,13 +248,12 @@ update msg model =
             let
                 newModel =
                     GraphViz.VizJs.processGraphVizResponse jsonVal model.windowSize
-                        |> Result.map
-                            (\newPositionsDict ->
-                                { model | graph = GraphUtil.updateNodePositions newPositionsDict model.graph }
-                            )
+                        |> Result.map (\newNodePositions -> { model | graph = GraphUtil.updateNodePositions newNodePositions model.graph })
                         |> Result.withDefault model
             in
-            ( newModel, Cmd.none )
+            ( newModel
+            , Ports.requestBoundingBoxesForEverything model.graph
+            )
 
         PerformAutomaticLayout layoutEngine ->
             ( model
@@ -262,9 +261,7 @@ update msg model =
             )
 
         NoOp ->
-            ( model
-            , Cmd.none
-            )
+            ( model, Cmd.none )
 
 
 setMousePositionIfCreatingEdge : MousePosition -> Model -> Model
