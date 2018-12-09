@@ -1,6 +1,6 @@
 module View exposing (focusLabelInput, view)
 
-import Browser.Dom
+import Browser.Dom as Dom
 import Canvas
 import Data.Layout as Layout
 import Export
@@ -376,4 +376,4 @@ focusLabelInput : Cmd Msg
 focusLabelInput =
     Task.attempt
         (\_ -> NoOp)
-        (Browser.Dom.focus labelInputId)
+        (Dom.focus labelInputId)

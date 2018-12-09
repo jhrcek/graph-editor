@@ -1,7 +1,8 @@
 module Main exposing (main)
 
+import BoundingBox
 import Browser
-import Browser.Dom
+import Browser.Dom as Dom
 import Browser.Events
 import Export
 import File.Download
@@ -49,8 +50,8 @@ init _ =
       , windowSize = { width = 800, height = 600 }
       }
     , Cmd.batch
-        [ Ports.requestBoundingBoxesForEverything initialGraph
-        , Task.perform GotViewport Browser.Dom.getViewport
+        [ BoundingBox.forAllNodeAndEdgeTexts initialGraph
+        , Task.perform GotViewport Dom.getViewport
         ]
     )
 
@@ -67,7 +68,7 @@ update msg model =
                 | graph = GraphUtil.insertNode newNode model.graph
                 , newNodeId = model.newNodeId + 1
               }
-            , Ports.requestNodeTextBoundingBox model.newNodeId
+            , BoundingBox.forNodeText model.newNodeId
             )
 
         NodeDrag dragMsg ->
@@ -98,7 +99,7 @@ update msg model =
                     case model.editorMode of
                         EditMode (EditingNodeLabel node) ->
                             ( GraphUtil.updateNodeLabel node.id (NodeText Nothing (nodeLabelToString node.label)) model.graph
-                            , Graph.get node.id model.graph |> Ports.requestBoundingBoxesForContext
+                            , Graph.get node.id model.graph |> BoundingBox.forNodeContext
                             )
 
                         _ ->
@@ -132,7 +133,7 @@ update msg model =
                 ( newGraph, command ) =
                     case model.editorMode of
                         EditMode (EditingEdgeLabel edge) ->
-                            ( GraphUtil.insertEdge edge model.graph, Ports.requestEdgeTextBoundingBox edge.from edge.to )
+                            ( GraphUtil.insertEdge edge model.graph, BoundingBox.forEdgeText edge.from edge.to )
 
                         _ ->
                             ( model.graph, Cmd.none )
@@ -156,7 +157,7 @@ update msg model =
                     case model.editorMode of
                         EditMode (CreatingEdge startNodeId _) ->
                             ( GraphUtil.insertEdge { from = startNodeId, to = endNodeId, label = EdgeLabel Nothing "" } model.graph
-                            , Ports.requestEdgeTextBoundingBox startNodeId endNodeId
+                            , BoundingBox.forEdgeText startNodeId endNodeId
                             )
 
                         _ ->
@@ -203,8 +204,13 @@ update msg model =
             , Cmd.none
             )
 
-        SetBoundingBox bbox ->
-            ( { model | graph = GraphUtil.setBoundingBox bbox model.graph }
+        SetNodeBoundingBox nodeId bbox ->
+            ( { model | graph = GraphUtil.setNodeBoundingBox nodeId bbox model.graph }
+            , Cmd.none
+            )
+
+        SetEdgeBoundingBox fromNode toNode bbox ->
+            ( { model | graph = GraphUtil.setEdgeBoundingBox fromNode toNode bbox model.graph }
             , Cmd.none
             )
 
@@ -242,6 +248,11 @@ update msg model =
             , File.Download.string fileName "text/plain" (graphToString model.graph)
             )
 
+        PerformAutomaticLayout layoutEngine ->
+            ( model
+            , Ports.requestGraphVizPlain layoutEngine model.graph
+            )
+
         ReceiveLayoutInfoFromGraphviz jsonVal ->
             let
                 newModel =
@@ -250,12 +261,7 @@ update msg model =
                         |> Result.withDefault model
             in
             ( newModel
-            , Ports.requestBoundingBoxesForEverything model.graph
-            )
-
-        PerformAutomaticLayout layoutEngine ->
-            ( model
-            , Ports.requestGraphVizPlain layoutEngine model.graph
+            , BoundingBox.forAllNodeAndEdgeTexts model.graph
             )
 
         NoOp ->
@@ -296,7 +302,7 @@ processDragMsg msg model =
                         (\drag ->
                             ( GraphUtil.updateDraggedNode drag model.graph
                               -- After dnd completed, only update bounding boxes of 1. node 2. its incoming and 3. its outgoing edges.
-                            , Ports.requestBoundingBoxesForContext <| Graph.get drag.nodeId model.graph
+                            , BoundingBox.forNodeContext <| Graph.get drag.nodeId model.graph
                             )
                         )
                         model.draggedNode
@@ -327,7 +333,6 @@ subscriptions model =
     Sub.batch
         [ nodeDragDropSubscriptions model.draggedNode
         , edgeCreationSubscriptions model.editorMode
-        , Ports.setBoundingBox SetBoundingBox
         , Ports.receiveGraphVizPlain ReceiveLayoutInfoFromGraphviz
         , Browser.Events.onResize WindowResized
         ]
@@ -369,7 +374,7 @@ main =
         }
 
 
-extractWindowSize : Browser.Dom.Viewport -> WindowSize
+extractWindowSize : Dom.Viewport -> WindowSize
 extractWindowSize { viewport } =
     { width = viewport.width
     , height = viewport.height

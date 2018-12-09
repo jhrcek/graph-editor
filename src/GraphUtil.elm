@@ -3,7 +3,8 @@ module GraphUtil exposing
     , insertEdge
     , insertNode
     , removeEdge
-    , setBoundingBox
+    , setEdgeBoundingBox
+    , setNodeBoundingBox
     , setNodeText
     , updateDraggedNode
     , updateNodeLabel
@@ -107,23 +108,6 @@ crashWorkAround nodeId =
         , y = 0
         }
     }
-
-
-setBoundingBox : BBox -> ModelGraph -> ModelGraph
-setBoundingBox bbox graph =
-    case String.split ":" bbox.elementId of
-        [ nodeIdString ] ->
-            String.toInt nodeIdString
-                |> Maybe.map (\nodeId -> setNodeBoundingBox nodeId bbox graph)
-                |> Maybe.withDefault graph
-
-        [ edgeFromIdStr, edgeToIdStr ] ->
-            Maybe.map2 (\a b -> ( a, b )) (String.toInt edgeFromIdStr) (String.toInt edgeToIdStr)
-                |> Maybe.map (\( fromId, toId ) -> setEdgeBoundingBox fromId toId bbox graph)
-                |> Maybe.withDefault graph
-
-        _ ->
-            graph
 
 
 setNodeBoundingBox : NodeId -> BBox -> ModelGraph -> ModelGraph

@@ -20,18 +20,6 @@
       node: document.getElementById('elm')
     });
 
-    /* Port for determining Bounding Box of SVG element with given ID
-     * BBox is used to determine exact size of rectangle drawn around the text
-     */
-    app.ports.requestBoundingBox.subscribe(function(idOfSvgText) {
-      requestAnimationFrame(function() {
-        var text = document.getElementById(idOfSvgText);
-        var bbox = text.getBBox();
-        bbox.elementId = idOfSvgText;
-        app.ports.setBoundingBox.send(bbox);
-      })
-    });
-
     /* Port for calling external graphviz library (viz.js). Given graphviz source
      * String (without layout info) it will generate output in graphviz "plain" format,
      * enriched by layout information (x,y) of individual nodes.

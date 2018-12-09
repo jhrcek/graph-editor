@@ -17,6 +17,7 @@ module Types exposing
     , NodeText(..)
     , WindowSize
     , edgeLabelToString
+    , elementToBBox
     , exportFormatToString
     , getDraggedNodePosition
     , mousePositionDecoder
@@ -26,7 +27,7 @@ module Types exposing
     , setEdgeText
     )
 
-import Browser.Dom
+import Browser.Dom as Dom
 import Data.Layout exposing (LayoutEngine)
 import Graph exposing (Graph, NodeId)
 import Json.Decode as Decode exposing (Decoder)
@@ -96,9 +97,10 @@ type Msg
       -- Switching between modes
     | SetMode EditorMode
     | PerformAutomaticLayout LayoutEngine
-    | SetBoundingBox BBox
+    | SetNodeBoundingBox NodeId BBox
+    | SetEdgeBoundingBox NodeId NodeId BBox
     | ModalStateChange ModalState
-    | GotViewport Browser.Dom.Viewport
+    | GotViewport Dom.Viewport
     | WindowResized Int Int
     | Download ExportFormat
     | ReceiveLayoutInfoFromGraphviz Json.Encode.Value
@@ -214,5 +216,9 @@ type alias BBox =
     , y : Float
     , width : Float
     , height : Float
-    , elementId : String
     }
+
+
+elementToBBox : Dom.Element -> BBox
+elementToBBox { element } =
+    element

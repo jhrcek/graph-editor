@@ -3,6 +3,10 @@ module Data.Layout exposing
     , engineToString
     )
 
+{-| GraphViz layout engines available through viz-js
+<https://github.com/mdaines/viz.js/wiki/API#render-options>
+-}
+
 
 type LayoutEngine
     = Circo
