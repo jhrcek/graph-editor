@@ -34,7 +34,7 @@
         files: []
       };
       viz.renderString(request.graphvizSource, renderOptions)
-        .then(function(plainOutput) {
+        .then(plainOutput => {
           app.ports.receiveGraphVizPlain.send({
             GraphViz_PlainOutput: plainOutput
           });

@@ -104,6 +104,7 @@ type Msg
     | WindowResized Int Int
     | Download ExportFormat
     | ReceiveLayoutInfoFromGraphviz Json.Encode.Value
+    | Resize Float
     | NoOp
 
 

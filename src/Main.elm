@@ -264,8 +264,32 @@ update msg model =
             , BoundingBox.forAllNodeAndEdgeTexts model.graph
             )
 
+        Resize shrinkFactor ->
+            ( { model | graph = resizeGraph shrinkFactor model.windowSize model.graph }
+            , Cmd.none
+            )
+
         NoOp ->
             ( model, Cmd.none )
+
+
+resizeGraph : Float -> WindowSize -> ModelGraph -> ModelGraph
+resizeGraph shrinkFactor { width, height } graph =
+    let
+        halfWidth =
+            width / 2
+
+        halfHeight =
+            height / 2
+    in
+    Graph.mapNodes
+        (\n ->
+            { n
+                | x = round <| (toFloat n.x - halfWidth) * shrinkFactor + halfWidth
+                , y = round <| (toFloat n.y - halfHeight) * shrinkFactor + halfHeight
+            }
+        )
+        graph
 
 
 setMousePositionIfCreatingEdge : MousePosition -> Model -> Model

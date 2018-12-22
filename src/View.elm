@@ -7,7 +7,7 @@ import Export
 import Graph
 import GraphUtil
 import Html exposing (Html, button, div, form, h3, input, text, textarea)
-import Html.Attributes exposing (checked, class, classList, id, name, placeholder, readonly, rows, size, style, type_, value)
+import Html.Attributes exposing (checked, class, classList, id, name, placeholder, readonly, rows, size, style, title, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Markdown
 import Svg exposing (Svg)
@@ -201,12 +201,15 @@ controlsPanel : EditorMode -> Html Msg
 controlsPanel editorMode =
     div [ style "position" "absolute", style "top" "0", style "width" "100%" ]
         [ modeButtons editorMode
+        , helpAndAboutButtons
         , if editorMode == LayoutMode then
-            layoutEngineButtons
+            div []
+                [ layoutEngineButtons
+                , zoomButtons
+                ]
 
           else
             text ""
-        , helpAndAboutButtons
         ]
 
 
@@ -243,7 +246,7 @@ modeButton isActive modeText mode =
 
 layoutEngineButtons : Html Msg
 layoutEngineButtons =
-    div [ class "btn-group btn-group-sm" ] <|
+    div [ class "btn-group btn-group-sm ml-2" ] <|
         List.map layoutEngineButton [ Layout.Dot, Layout.Circo, Layout.Fdp, Layout.Neato, Layout.Osage, Layout.Twopi ]
 
 
@@ -251,6 +254,14 @@ layoutEngineButton : Layout.LayoutEngine -> Html Msg
 layoutEngineButton layoutEngine =
     button [ class "btn btn-secondary", onClick (PerformAutomaticLayout layoutEngine) ]
         [ text (Layout.engineToString layoutEngine) ]
+
+
+zoomButtons : Html Msg
+zoomButtons =
+    div [ class "btn-group btn-group-sm ml-2" ]
+        [ button [ class "btn btn-secondary", title "Shrink graph", onClick (Resize 0.9) ] [ text "➖" ]
+        , button [ class "btn btn-secondary", title "Expand graph", onClick (Resize 1.1) ] [ text "➕" ]
+        ]
 
 
 helpAndAboutButtons : Html Msg
@@ -342,13 +353,15 @@ It has three modes: *Create/Edit*, *Move* and *Delete*.
 Each modes makes different graph editing actions available.
 
 In **Create/Edit** mode you can
-  * Create new nodes by **clicking** on the canvas
-  * Edit node text by **double clicking** nodes. Enter confirms the edit.
-  * Create new edges by **click & holding** mouse button on a node, dragging and **releasing mouse** on target node.
-  * Edit edge text by **double clicking** edges. Enter confirms the edit.
+  * create new nodes by clicking on the canvas
+  * edit node text by double clicking nodes. Enter confirms the edit.
+  * create new edges by click & holding mouse button on a node, dragging and releasing mouse on target node.
+  * edit edge text by double clicking edges. Enter confirms the edit.
 
-In **Layout** mode you can move nodes by drag & drop: click and hold the mouse on node, move it where you want and release the mouse button.
-Alternatively you can select one of the provided layout engines (based on [GraphViz](https://graphviz.gitlab.io/) via [viz.js](http://viz-js.com/)) to arrange the nodes automatically.
+In **Layout** mode you can
+  * move nodes by drag and drop
+  * layout the entire graph automatically using one of the provided layout engines (based on [GraphViz](https://graphviz.gitlab.io/)).
+  * move nodes closer together / further away from each other using - / + buttons.
 
 In **Delete** mode you can remove nodes and edges from the graph by just clicking them. Removing a node removes all its incoming and outgoing edges.
   """
